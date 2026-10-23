@@ -111,10 +111,10 @@ Never pull out a MicroSD card while the console is powered on, as this can corru
 #### Step 6: Locate in EmulationStation
 
 * **If you pasted into `tools/` (Recommended):**  
-  In EmulationStation, navigate to **Options** -> Select **Tools** -> You will see **`USB_Network_Manager`** listed alongside *PortMaster* and *ThemeMaster*:  
+  In EmulationStation, press **START** to open the menu, and go to **OPTIONS** -> Select **Tools** -> You will see **`USB_Network_Manager`** listed alongside *PortMaster* and *ThemeMaster*:  
 
   ![Options Menu](ScreenShots/screenshotoptions.png)  
-  *Figure 1: Navigating to Options -> Tools.*  
+  *Figure 1: Press START, go to Options -> Tools.*  
 
   ![Tools Menu](ScreenShots/screenshottools.png)  
   *Figure 2: USB_Network_Manager inside the Tools menu.*
