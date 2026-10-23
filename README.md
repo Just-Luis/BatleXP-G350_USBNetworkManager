@@ -4,9 +4,24 @@
 
 [![Platform](https://img.shields.io/badge/Platform-Rockchip%20RK3326-blue.svg)](https://en.wikipedia.org/wiki/Rockchip)
 [![OS](https://img.shields.io/badge/OS-dArkOS%20%2F%20ArkOS-red.svg)](https://github.com/christianhaitian/arkos)
-[![Interface](https://img.shields.io/badge/UI-3.5%22%20Gamepad%20Calibrated-green.svg)](https://github.com)
+[![UI](https://img.shields.io/badge/Controls-Gamepad%20Driven-green.svg)](https://github.com)
 [![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Tested On](https://img.shields.io/badge/Tested%20Device-BatleXP%20G350-purple.svg)](https://github.com)
+
+---
+
+## 📖 Beginner's Guide & Full Tutorial
+
+> [!TIP]
+> ### 🚀 First time setting this up?
+> **👉 Read the complete, step-by-step community tutorial: [COMMUNITY_TUTORIAL.md](COMMUNITY_TUTORIAL.md)**
+>
+> A complete, beginner-friendly walkthrough with visual diagrams and FAQs:
+> * 💾 **Installation:** Where to paste `USB_Network_Manager.sh` (`tools/` vs `ports/`).
+> * 🔌 **Hardware Requirements:** Which USB cable to use (and which to avoid).
+> * 🕹️ **Console Setup:** Switching modes and launching services on your handheld.
+> * 🖥️ **Windows Tethering:** Sharing your PC's Wi-Fi connection with the console in 3 clicks.
+> * 📁 **Daily Use:** Downloading games from PortMaster and transferring ROMs over SFTP/Samba.
 
 ---
 
@@ -42,7 +57,7 @@ Traditionally, this forced owners to:
 * 🖼️ **Box-Art & Metadata Scraping:** Scrape covers, screenshots, and descriptions directly inside EmulationStation.
 * 📁 **Windows File Explorer Integration:** Drag and drop ROMs directly into `\\192.168.137.2\roms` as if it were a local network drive.
 * 🔒 **Instant-Login OpenSSH Server:** Custom PAM and entropy patches eliminate the 15-second SSH hangs common on RK3326 devices.
-* 📺 **Tailored 3.5" Handheld Layout:** Strictly formatted for 42 columns × 14 lines with 3 lines of safety headroom—no text wrapping, no top header cutoff.
+* 🎮 **Native Gamepad Interface:** Clean on-screen menu navigable entirely with your console's physical buttons (A, Y, X, B).
 * 🔄 **Hardware Mode Switcher:** Toggle between **Wired PC (Peripheral)** and **USB Host (OTG)** mode on the fly to support USB flash drives and external gamepads.
 * 🔋 **Battery-Friendly:** Network services only run on-demand when you explicitly press `[A]`. Offline gaming consumes zero background power.
 
@@ -160,12 +175,6 @@ Launch **`USB Network Manager`** from **TOOLS** (or **PORTS**) on your console:
 
 * **Primary Target:** BatleXP G350 (Rockchip RK3326) running dArkOS / ArkOS.
 * **Compatible Devices:** Other RK3326-based handhelds running ArkOS (e.g. Anbernic RG351P/M/V, Powkiddy RGB20S, RK2020) with single USB-C OTG ports.
-
----
-
-## 📖 In-Depth Documentation
-
-For the full, beginner-friendly community guide with screenshots and advanced troubleshooting, please see **[COMMUNITY_TUTORIAL.md](COMMUNITY_TUTORIAL.md)**.
 
 ---
 
