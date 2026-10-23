@@ -185,41 +185,81 @@ The menu provides a live overview of your connection and hardware mode directly 
 
 ---
 
-## 🖥️ 5. Windows PC Setup: Enable Internet Connection Sharing (One-Time Setup)
+## 🖥️ 5. Windows PC Setup (One-Time Setup)
 
-Now that your console is running in Wired PC mode with services active, configure Windows to share its internet connection:
+Now that your console is running in Wired PC mode with services active, Windows will detect a new network adapter named **`Remote NDIS based Internet Sharing Device`** (typically labeled **Ethernet 2**).
+
+This one-time setup consists of two simple steps:
+1. **Set the Static IP on Ethernet 2:** Configure the console's adapter once with `192.168.7.1`. **Keep it configured like this permanently** so direct file transfers always work without IP conflicts!
+2. **Configure Wi-Fi Sharing:** Toggle this on when you want Internet on the console (PortMaster, Scraping), and turn it off when transferring files.
+
+---
+
+### Step 1: Configure Static IP on Console Adapter (`Ethernet 2`)
+
+> [!IMPORTANT]
+> **Always Keep This Configured:**  
+> This static IP setting is applied directly to **Ethernet 2** (the console's adapter). Once configured, you leave it like this permanently!
 
 1. On your Windows PC, press `Win + R`, type `ncpa.cpl`, and hit **Enter** to open **Network Connections**:  
 
    ![Run ncpa.cpl](ScreenShots/Win+R.png)  
    *Figure 6: Press Win + R and enter ncpa.cpl.*
 
-2. You will now see your primary internet adapter (e.g., **Wi-Fi**) and the newly detected console USB adapter (typically named **Ethernet 2** with device description `Remote NDIS Compatible Device` or `USB Ethernet/RNDIS Gadget`).
-3. **Right-click your active Wi-Fi adapter** (or primary Ethernet adapter) -> Select **Properties**:  
+2. Locate the console's network adapter (**Ethernet 2** with device description `Remote NDIS based Internet Sharing Device`). Right-click it and select **Properties**:  
+
+   ![Right-click Ethernet 2](ScreenShots/ethernet2.png)  
+   *Figure 7: Right-click Ethernet 2 (Remote NDIS) and select Properties.*
+
+3. In the list, double-click **Internet Protocol Version 4 (TCP/IPv4)**:  
+
+   ![Ethernet 2 Properties](ScreenShots/ethernet2properties.png)  
+   *Figure 8: Double-click Internet Protocol Version 4 (TCP/IPv4).*
+
+4. Select **"Use the following IP address"** and enter:  
+   * **IP address:** `192.168.7.1`  
+   * **Subnet mask:** `255.255.255.0`  
+   * **Default gateway:** *(leave completely blank)*  
+
+   ![Static IP Configuration](ScreenShots/ethernet2ip.png)  
+   *Figure 9: Set IP to 192.168.7.1 and Subnet mask to 255.255.255.0.*
+
+5. Click **OK**, then click **OK** again to apply and save.  
+   *(Leave this adapter configured like this permanently! You never need to touch it again).*
+
+---
+
+### Step 2: Configure Wi-Fi Internet Tethering (For PortMaster & Scrapers)
+
+Whenever you want the console to access the internet (to download ports in PortMaster, scrape box art, or update cores), simply enable sharing on your active Wi-Fi adapter:
+
+1. In `ncpa.cpl`, **right-click your active Wi-Fi adapter** -> Select **Properties**:  
 
    ![Network Connections](ScreenShots/Network.png)  
-   *Figure 7: Right-click your active Wi-Fi adapter and select Properties.*
+   *Figure 10: Right-click your active Wi-Fi adapter and select Properties.*
 
-4. Click the **Sharing** tab at the top.
-5. Check the box:  
+2. Click the **Sharing** tab at the top.
+3. Check the box:  
    `[✓] Allow other network users to connect through this computer's Internet connection`
-6. In the dropdown under *Home networking connection*, select your console's adapter (e.g. **Ethernet 2**).
-7. Click **OK**:  
+4. In the dropdown under *Home networking connection*, select your console's adapter (**Ethernet 2**).
+5. Click **OK**:  
 
    ![Wi-Fi Sharing Settings](ScreenShots/NetworkProperties.png)  
-   *Figure 8: Configure Internet Sharing for Ethernet 2.*
+   *Figure 11: Configure Internet Sharing for Ethernet 2.*
 
 > [!TIP]
 > **Instant Live Verification:** Look at your console screen!  
-> Within a few seconds of clicking OK, **`GATEWAY`** will change to `192.168.137.1 (Online)` and **`INTERNET`** will change to `ONLINE (PortMaster Ready)`. You are fully connected and ready to go!  
+> Within a few seconds of clicking OK, **`GATEWAY`** will change to `192.168.137.1 (Online)` and **`INTERNET`** will change to `ONLINE (PortMaster Ready)`.  
 > *(If it does not automatically update right away, simply press **`[A]`** again on your handheld to force a status check and refresh the gateway).*
 
-> [!CAUTION]
-> **Important: Wi-Fi Sharing vs. File Transfers (SSH / SFTP):**  
-> When transferring files, **Windows cannot be sharing Wi-Fi**, otherwise SSH will not connect with the console.  
-> * **When using Internet on the console (PortMaster / Scraper / Updates):** Wi-Fi sharing should be **ON**.  
-> * **When transferring ROMs & files (WinSCP / FileZilla / SSH):** Wi-Fi sharing must be **OFF** (uncheck sharing in `ncpa.cpl`).  
-> *(We have noted this behavior and will work on a fix so both can work simultaneously without manual toggling in a future update).*
+---
+
+### 🔄 The Golden Rule for Daily Use:
+* 🌐 **When using Internet on your console (PortMaster, Scraping, Updates):**  
+  Turn Wi-Fi sharing **ON** in `ncpa.cpl`.
+* ⚡ **When transferring games & ROMs (WinSCP, FileZilla, Windows Explorer):**  
+  Turn Wi-Fi sharing **OFF** (uncheck sharing in `ncpa.cpl`), and connect directly to **`192.168.7.2`**!  
+  *(Because your `Ethernet 2` adapter is permanently set to `192.168.7.1`, file transfers work instantly at full USB speed without Windows firewall or NAT interference).*
 
 ---
 
@@ -236,19 +276,22 @@ Now that your console is running in Wired PC mode with services active, configur
 
 ### Workflow B: Transferring ROMs via Windows File Explorer (Samba)
 > [!NOTE]
-> Ensure Windows Wi-Fi sharing is **OFF** in `ncpa.cpl` while transferring files, otherwise Windows firewall/NAT routing can block access to the console.
+> Ensure Windows Wi-Fi sharing is **OFF** in `ncpa.cpl` while transferring files. With `192.168.7.1` permanently configured on `Ethernet 2`, connect directly to `\\192.168.7.2\roms`.
 
 1. Plug in the USB cable and press **[A]** in **USB Network Manager**.
 2. On your Windows PC, press `Win + E` to open File Explorer.
 3. In the address bar at the top, type:  
-   `\\192.168.137.2\roms`  
+   `\\192.168.7.2\roms`  
    and press **Enter**.
-4. Drag and drop your game files directly into your console's console folders (`gba`, `snes`, `psx`, etc.).
+4. If prompted for network credentials:
+   * **Username:** `ark`
+   * **Password:** `ark`
+5. Drag and drop your game files directly into your console's game folders (`gba`, `snes`, `psx`, etc.).
 
 ### Workflow C: Transferring ROMs via SFTP (WinSCP / FileZilla)
 > [!WARNING]
 > **Windows Wi-Fi Sharing Must Be OFF:**  
-> When transferring files, Windows cannot be sharing Wi-Fi, otherwise SSH will not connect with the console. Open `ncpa.cpl`, right-click Wi-Fi -> Properties -> Sharing, and uncheck the box before connecting with WinSCP or FileZilla.
+> When transferring files, Windows cannot be sharing Wi-Fi, otherwise SSH will not connect with the console. With `Ethernet 2` permanently set to `192.168.7.1`, connect directly to `192.168.7.2`.
 
 > [!TIP]
 > **Don't have WinSCP installed?**  
@@ -260,7 +303,7 @@ Now that your console is running in Wired PC mode with services active, configur
 3. Open **WinSCP** on your PC. Click **+** or **New Tab** to add a new connection:  
 
    ![WinSCP Add Connection](ScreenShots/winSCPAddNewConnection.png)  
-   *Figure 9: Click + or New Tab to add a new connection in WinSCP.*
+   *Figure 12: Click + or New Tab to add a new connection in WinSCP.*
 
 4. Configure your connection settings:  
    * **Protocol:** `SFTP`  
@@ -270,7 +313,7 @@ Now that your console is running in Wired PC mode with services active, configur
    * **Password:** `ark`  
 
    ![WinSCP Login Dialog](ScreenShots/WinSCPConnect.png)  
-   *Figure 10: WinSCP SFTP login parameters (192.168.7.2, port 22, ark / ark).*
+   *Figure 13: WinSCP SFTP login parameters (192.168.7.2, port 22, ark / ark).*
 
    > [!TIP]
    > **Save Your Login for Next Time:**  
@@ -280,12 +323,12 @@ Now that your console is running in Wired PC mode with services active, configur
 6. To reach your games, click the path bar at the top:  
 
    ![WinSCP Go To Roms](ScreenShots/winSCPGoToRoms.png)  
-   *Figure 11: Click the directory path bar to navigate to /roms/.*
+   *Figure 14: Click the directory path bar to navigate to /roms/.*
 
 7. Type **`/roms`** and click **OK**:  
 
-   ![WinSCP Open Directory](ScreenShots/WinSCPGoToRoms%20(2).png)  
-   *Figure 12: Enter /roms to open your console's game folders.*
+   ![WinSCP Open Directory](ScreenShots/winSCPGoToRoms2.png)  
+   *Figure 15: Enter /roms to open your console's game folders.*
 
 8. You now have full access to drag and drop ROMs directly into your system folders (`gba`, `snes`, `psx`, etc.) at native USB speeds (~25–35 MB/s)!
 
@@ -311,7 +354,7 @@ The project includes ready-to-run 1-click test utilities on your PC:
 Double-click **`Test_Internet_On_G350.bat`** on your PC to see live diagnostic output:
 
 ![Internet Tethering Test Output](ScreenShots/Internettest.png)  
-*Figure 13: Live execution of Test_Internet_On_G350.bat showing all tests passing.*
+*Figure 16: Live execution of Test_Internet_On_G350.bat showing all tests passing.*
 
 ---
 
