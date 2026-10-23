@@ -137,11 +137,8 @@ Launch **`USB Network Manager`** from **TOOLS** (or **PORTS**) on your console:
 | :--- | :--- |
 | **[`USB_Network_Manager.sh`](USB_Network_Manager.sh)** | **The main console tool.** Single self-contained script to paste into `tools/` or `ports/`. |
 | **[`COMMUNITY_TUTORIAL.md`](COMMUNITY_TUTORIAL.md)** | **Complete Community Guide.** In-depth tutorial with detailed walkthroughs, diagrams, and FAQs. |
-| **[`PROJECT_DOCUMENTATION.md`](PROJECT_DOCUMENTATION.md)** | **Deep Technical Architecture.** Kernel DTB patcher, PAM patches, and low-level specifications. |
 | **[`Test_Internet_On_G350.bat`](Test_Internet_On_G350.bat)** | 1-Click Windows batch tool to test physical link, remote ping (8.8.8.8), and DNS resolution. |
-| **[`Test_Internet_On_G350.ps1`](Test_Internet_On_G350.ps1)** | Native PowerShell diagnostic utility for Internet connection testing. |
 | **[`Test_Connection_G350.bat`](Test_Connection_G350.bat)** | 1-Click Windows batch script to test local USB connection and SSH port 22 response. |
-| **[`Test_Connection_G350.ps1`](Test_Connection_G350.ps1)** | Native PowerShell SSH connectivity tester. |
 | **[`.usb_network/`](.usb_network/)** | *(Optional)* Standalone modular sub-scripts for advanced users running headless commands over SSH. |
 
 ---
