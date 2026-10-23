@@ -109,14 +109,30 @@ Never pull out a MicroSD card while the console is powered on, as this can corru
 * Power on the console.
 
 #### Step 6: Locate in EmulationStation
-* In EmulationStation's main carousel, navigate to:
-  * **TOOLS** (if pasted in `tools/`) -> You will see **`USB Network Manager`** ready to launch!
-  * **PORTS** (if pasted in `ports/`) -> You will see **`USB Network Manager`** listed with your ports.
+
+* **If you pasted into `tools/` (Recommended):**  
+  In EmulationStation, navigate to **Options** -> Select **Tools** -> You will see **`USB_Network_Manager`** listed alongside *PortMaster* and *ThemeMaster*:  
+
+  ![Options Menu](ScreenShots/screenshotoptions.png)  
+  *Figure 1: Navigating to Options -> Tools.*  
+
+  ![Tools Menu](ScreenShots/screenshottools.png)  
+  *Figure 2: USB_Network_Manager inside the Tools menu.*
+
+* **If you pasted into `ports/` (Alternative):**  
+  Navigate to the **PORTS** section on the main carousel:  
+
+  ![Ports Menu](ScreenShots/Port.png)  
+  *Figure 3: USB Network Manager in the Ports list.*
 
 > [!TIP]
-> **Already have SSH or want to refresh without restarting?**  
-> If you transferred the file over an existing connection or while EmulationStation was running, you don't need a full reboot:  
-> Press `START` -> `UI Settings` -> `Update Game Lists` (or `Restart EmulationStation`) and the new entry will appear immediately!
+> **Want to refresh without restarting?**  
+> If you transferred the file over an existing connection or while EmulationStation was running, press `START` to open the Main Menu:  
+> 
+> ![Main Menu](ScreenShots/screenshotmenu.png)  
+> *Figure 4: EmulationStation Main Menu.*  
+> 
+> Go to **UI Settings** -> **Update Game Lists** (or **Quit** -> **Restart EmulationStation**) and the new entry will appear immediately!
 
 ---
 
@@ -136,7 +152,10 @@ Never pull out a MicroSD card while the console is powered on, as this can corru
 * Launch **`USB Network Manager`**.
 
 ### The On-Screen Display:
-The menu provides a live overview of your connection and hardware mode:
+The menu provides a live overview of your connection and hardware mode directly on your console's screen:
+
+![USB Network Manager Console Display](ScreenShots/USBNM.png)  
+*Figure 5: Live USB Network Manager dashboard on the BatleXP G350 display.*
 
 ```text
 ==========================================
@@ -180,14 +199,25 @@ The menu provides a live overview of your connection and hardware mode:
 
 Now that your console is running in Wired PC mode with services active, configure Windows to share its internet connection:
 
-1. On your Windows PC, press `Win + R`, type `ncpa.cpl`, and hit **Enter** to open **Network Connections**.
+1. On your Windows PC, press `Win + R`, type `ncpa.cpl`, and hit **Enter** to open **Network Connections**:  
+
+   ![Run ncpa.cpl](ScreenShots/Win+R.png)  
+   *Figure 6: Press Win + R and enter ncpa.cpl.*
+
 2. You will now see your primary internet adapter (e.g., **Wi-Fi**) and the newly detected console USB adapter (typically named **Ethernet 2** with device description `Remote NDIS Compatible Device` or `USB Ethernet/RNDIS Gadget`).
-3. **Right-click your active Wi-Fi adapter** (or primary Ethernet adapter) -> Select **Properties**.
+3. **Right-click your active Wi-Fi adapter** (or primary Ethernet adapter) -> Select **Properties**:  
+
+   ![Network Connections](ScreenShots/Network.png)  
+   *Figure 7: Right-click your active Wi-Fi adapter and select Properties.*
+
 4. Click the **Sharing** tab at the top.
 5. Check the box:  
    `[✓] Allow other network users to connect through this computer's Internet connection`
 6. In the dropdown under *Home networking connection*, select your console's adapter (e.g. **Ethernet 2**).
-7. Click **OK**.
+7. Click **OK**:  
+
+   ![Wi-Fi Sharing Settings](ScreenShots/NetworkProperties.png)  
+   *Figure 8: Configure Internet Sharing for Ethernet 2.*
 
 > [!TIP]
 > **Instant Live Verification:** Look at your console screen!  
@@ -231,14 +261,33 @@ Now that your console is running in Wired PC mode with services active, configur
 
 1. Plug in the USB cable and press **[A]** in **USB Network Manager**.
 2. Ensure Windows Wi-Fi sharing is turned **OFF**.
-3. Open **WinSCP** or **FileZilla** on your PC.
-4. Configure your connection:
-   * **Protocol:** SFTP
-   * **Host:** `192.168.137.2` (or `192.168.7.2`)
-   * **Port:** `22`
-   * **Username:** `ark`
-   * **Password:** `ark`
-5. Click **Connect**. You now have full read/write access to `/roms/`.
+3. Open **WinSCP** on your PC. Click **+** or **New Tab** to add a new connection:  
+
+   ![WinSCP Add Connection](ScreenShots/winSCPAddNewConnection.png)  
+   *Figure 9: Click + or New Tab to add a new connection in WinSCP.*
+
+4. Configure your connection settings:  
+   * **Protocol:** `SFTP`  
+   * **Host:** `192.168.7.2` (or `192.168.137.2`)  
+   * **Port:** `22`  
+   * **Username:** `ark`  
+   * **Password:** `ark`  
+
+   ![WinSCP Login Dialog](ScreenShots/WinSCPConnect.png)  
+   *Figure 10: WinSCP SFTP login parameters (192.168.7.2, port 22, ark / ark).*
+
+5. Click **Login**. WinSCP connects and opens in `/home/ark/`.
+6. To reach your games, click the path bar at the top:  
+
+   ![WinSCP Go To Roms](ScreenShots/winSCPGoToRoms.png)  
+   *Figure 11: Click the directory path bar to navigate to /roms/.*
+
+7. Type **`/roms`** and click **OK**:  
+
+   ![WinSCP Open Directory](ScreenShots/WinSCPGoToRoms%20(2).png)  
+   *Figure 12: Enter /roms to open your console's game folders.*
+
+8. You now have full access to drag and drop ROMs directly into your system folders (`gba`, `snes`, `psx`, etc.) at native USB speeds (~25–35 MB/s)!
 
 ### Workflow D: Switching Between PC Mode and Flash Drive (Host) Mode
 The Rockchip RK3326 chip uses different hardware transceiver configurations for connecting to a PC (Device/Peripheral) vs hosting USB drives (Host/OTG):
@@ -260,19 +309,23 @@ The project includes ready-to-run 1-click test utilities on your PC:
 * **`Test_Connection_G350.bat`**: Tests local physical cable link and SSH port 22 response.
 
 Double-click **`Test_Internet_On_G350.bat`** on your PC to see live diagnostic output:
+
+![Internet Tethering Test Output](ScreenShots/Internettest.png)  
+*Figure 13: Live execution of Test_Internet_On_G350.bat showing all tests passing.*
+
 ```text
-[1/4] Verificando conexion local con la consola (192.168.137.2)...
- [OK] Consola conectada y respondiendo en 192.168.137.2.
+[1/4] Checking local console connection (192.168.137.2)...
+ [OK] Console connected and responding at 192.168.137.2.
 
-[2/4] Probando salida a Internet (ping 8.8.8.8 desde la consola)...
- [OK] La consola tiene salida directa a Internet (Ping a 8.8.8.8 exitoso).
+[2/4] Testing console outbound Internet access (Ping 8.8.8.8)...
+ [OK] Console has direct Internet access (Ping to 8.8.8.8 successful).
 
-[3/4] Probando resolucion de nombres DNS (github.com)...
- [OK] Resolucion DNS funcionando correctamente.
+[3/4] Testing DNS name resolution (github.com)...
+ [OK] DNS name resolution functioning properly.
 
 ============================================================
- ¡FELICIDADES! EL TETHERING DE INTERNET ESTA ACTIVO.
- Ya puedes usar PortMaster, descargar caratulas o actualizar ArkOS.
+ CONGRATULATIONS! INTERNET TETHERING IS FULLY ACTIVE.
+ You can now download from PortMaster, scrape covers, or update ArkOS.
 ============================================================
 ```
 
