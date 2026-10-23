@@ -164,22 +164,6 @@ The menu provides a live overview of your connection and hardware mode directly 
 ![USB Network Manager Console Display](ScreenShots/USBNM.png)  
 *Figure 5: Live USB Network Manager dashboard on the BatleXP G350 display.*
 
-```text
-==========================================
-   BATLEXP G350 - USB NETWORK MANAGER     
-==========================================
- USB MODE : WIRED PC (Peripheral)
- IP ADDR  : 192.168.137.2 (usb0)
- GATEWAY  : 192.168.137.1 (Online)
- SSH/SFTP : Port 22 (ark/ark) [RUNNING]
- SAMBA    : \\192.168.137.2\roms [OK]
- INTERNET : ONLINE (PortMaster Ready)
-------------------------------------------
- [A] Start Services (SSH & Net)  [Instant]
- [Y] Stop Services (Save Battery)[Instant]
- [X] Switch to USB HOST Mode     [Reboots]
- [B] Exit to EmulationStation
-```
 
 ### Gamepad Controls:
 
@@ -266,6 +250,11 @@ Now that your console is running in Wired PC mode with services active, configur
 > **Windows Wi-Fi Sharing Must Be OFF:**  
 > When transferring files, Windows cannot be sharing Wi-Fi, otherwise SSH will not connect with the console. Open `ncpa.cpl`, right-click Wi-Fi -> Properties -> Sharing, and uncheck the box before connecting with WinSCP or FileZilla.
 
+> [!TIP]
+> **Don't have WinSCP installed?**  
+> If you don't have an SFTP client on your PC, download the free official installer here:  
+> 📥 **[Download WinSCP (Official Site)](https://winscp.net/eng/download.php)**
+
 1. Plug in the USB cable and press **[A]** in **USB Network Manager**.
 2. Ensure Windows Wi-Fi sharing is turned **OFF**.
 3. Open **WinSCP** on your PC. Click **+** or **New Tab** to add a new connection:  
@@ -282,6 +271,10 @@ Now that your console is running in Wired PC mode with services active, configur
 
    ![WinSCP Login Dialog](ScreenShots/WinSCPConnect.png)  
    *Figure 10: WinSCP SFTP login parameters (192.168.7.2, port 22, ark / ark).*
+
+   > [!TIP]
+   > **Save Your Login for Next Time:**  
+   > Click the **Save** button (located directly beneath the *Username* field). WinSCP will save this session to your site list on the left (e.g., as `ark@192.168.7.2`), so next time you can connect instantly with a single double-click without having to re-enter your IP address, username, or password!
 
 5. Click **Login**. WinSCP connects and opens in `/home/ark/`.
 6. To reach your games, click the path bar at the top:  
@@ -319,22 +312,6 @@ Double-click **`Test_Internet_On_G350.bat`** on your PC to see live diagnostic o
 
 ![Internet Tethering Test Output](ScreenShots/Internettest.png)  
 *Figure 13: Live execution of Test_Internet_On_G350.bat showing all tests passing.*
-
-```text
-[1/4] Checking local console connection (192.168.137.2)...
- [OK] Console connected and responding at 192.168.137.2.
-
-[2/4] Testing console outbound Internet access (Ping 8.8.8.8)...
- [OK] Console has direct Internet access (Ping to 8.8.8.8 successful).
-
-[3/4] Testing DNS name resolution (github.com)...
- [OK] DNS name resolution functioning properly.
-
-============================================================
- CONGRATULATIONS! INTERNET TETHERING IS FULLY ACTIVE.
- You can now download from PortMaster, scrape covers, or update ArkOS.
-============================================================
-```
 
 ---
 
