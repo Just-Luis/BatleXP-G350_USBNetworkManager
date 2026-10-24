@@ -1,7 +1,7 @@
 #!/bin/bash
 # ==============================================================================
 # Script: Start_Wired_Services.sh
-# Device: BatleXP G350 / RK3326 Handhelds (dArkOS / ArkOS)
+# Device: Battle XP G350 / RK3326 Handhelds (dArkOS / ArkOS)
 # Layout: Tailored for 3.5" Handhelds (Max 44 cols x 16 rows, zero overflow)
 # ==============================================================================
 
@@ -67,7 +67,7 @@ printf "\033c" 2>/dev/null
 clear 2>/dev/null
 
 echo -e "${C_CYAN}============================================${C_RESET}"
-echo -e "${C_WHITE}    BATLEXP G350 - STARTING SERVICES        ${C_RESET}"
+echo -e "${C_WHITE}   BATTLE XP G350 - STARTING SERVICES       ${C_RESET}"
 echo -e "${C_CYAN}============================================${C_RESET}"
 
 # Check Hardware Mode

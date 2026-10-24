@@ -1,14 +1,14 @@
-# 🎮 BatleXP G350 USB Network Manager: Complete Community Guide & Tutorial
+# 🎮 Battle XP G350 USB Network Manager: Complete Community Guide & Tutorial
 
 > **Author:** Community Release / G350 Wired Project  
-> **Target Devices:** BatleXP G350 and compatible Rockchip RK3326 handheld consoles (RG351P, RGB20S, RK2020) running **dArkOS / ArkOS**.  
+> **Target Devices:** Battle XP G350 and compatible Rockchip RK3326 handheld consoles (RG351P, RGB20S, RK2020) running **dArkOS / ArkOS**.  
 > **Interface:** Single-file gamepad utility (`USB_Network_Manager.sh`) tailored for 3.5" handheld screens.
 
 ---
 
 ## 📖 1. What is This Tool?
 
-Many budget handheld retro consoles like the **BatleXP G350** have powerful Rockchip RK3326 processors but **no internal Wi-Fi chip**. Traditionally, adding games or downloading updates required physically removing the MicroSD card every time, putting it into a PC reader, and reinserting it. This causes wear on the delicate spring slot, risks corrupting save files, and makes using tools like **PortMaster** or the **box-art scraper** nearly impossible without external dongles.
+Many budget handheld retro consoles like the **Battle XP G350** have powerful Rockchip RK3326 processors but **no internal Wi-Fi chip**. Traditionally, adding games or downloading updates required physically removing the MicroSD card every time, putting it into a PC reader, and reinserting it. This causes wear on the delicate spring slot, risks corrupting save files, and makes using tools like **PortMaster** or the **box-art scraper** nearly impossible without external dongles.
 
 **USB Network Manager** transforms your console's physical USB-C port into a **high-speed bidirectional networking bridge** connected directly to your PC with a single USB cable.
 
@@ -26,7 +26,7 @@ Before starting, make sure you have the right cable:
 
 | Component | Requirement | Why? |
 | :--- | :--- | :--- |
-| **Console** | BatleXP G350 (dArkOS / ArkOS) | Tested on RK3326 kernel with `g_ether` gadget driver. |
+| **Console** | Battle XP G350 (dArkOS / ArkOS) | Tested on RK3326 kernel with `g_ether` gadget driver. |
 | **Cable** | **USB-A to USB-C Data Cable** | **CRITICAL:** Use a standard USB-A to USB-C cable (USB-A to PC, USB-C to handheld). |
 | **PC** | Windows 10 or 11 | Connected to home Wi-Fi or Ethernet. |
 
@@ -89,7 +89,7 @@ Never pull out a MicroSD card while the console is powered on, as this can corru
 * Wait until the screen and power LED turn completely off.
 
 #### Step 2: Remove the MicroSD Card
-* **Dual-Card Consoles (e.g. BatleXP G350, RG351V, RGB20S):**  
+* **Dual-Card Consoles (e.g. Battle XP G350, RG351V, RGB20S):**  
   Remove the card from the **TF2 / EXT / GAME** slot (the secondary slot containing your ROMs and tools).
 * **Single-Card Consoles:**  
   Remove the card from the **TF1 / OS** slot.
@@ -162,7 +162,7 @@ Never pull out a MicroSD card while the console is powered on, as this can corru
 The menu provides a live overview of your connection and hardware mode directly on your console's screen:
 
 ![USB Network Manager Console Display](ScreenShots/USBNM.png)  
-*Figure 5: Live USB Network Manager dashboard on the BatleXP G350 display.*
+*Figure 5: Live USB Network Manager dashboard on the Battle XP G350 display.*
 
 ### Gamepad Controls:
 
