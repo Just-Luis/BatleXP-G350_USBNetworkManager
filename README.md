@@ -144,7 +144,7 @@ Open Network Connections on your Windows PC (`Win + R`, type `ncpa.cpl`, and hit
 
 #### 🔄 Daily Use Summary:
 * 🌐 **For Internet (PortMaster, Scraping):** Turn Wi-Fi sharing **ON** in `ncpa.cpl`.
-* ⚡ **For ROM Transfers (WinSCP, Samba):** Turn Wi-Fi sharing **OFF**, and connect directly to **`192.168.7.2`** (SFTP port 22 `ark`/`ark` or Explorer `\\192.168.7.2\roms`)!
+* ⚡ **For ROM Transfers (WinSCP, Samba):** Connect via SFTP (port 22, `ark`/`ark`) to **`192.168.137.2`** while Wi-Fi sharing is ON, or **`192.168.7.2`** when it is OFF. You do **not** need to turn sharing off to transfer files.
 
 ---
 

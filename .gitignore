@@ -17,7 +17,9 @@ $RECYCLE.BIN/
 # ==========================================
 PROJECT_DOCUMENTATION.md
 README_WIRED.md
+ISSUES_AND_POLISH_CHECKLIST.md
 .sh examples/
+.usb_network/*grabber*
 # ==========================================
 # IDE & Python Cache
 # ==========================================
@@ -25,3 +27,4 @@ README_WIRED.md
 .idea/
 __pycache__/
 *.pyc
+*.raw

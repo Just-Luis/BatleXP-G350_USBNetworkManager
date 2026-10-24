@@ -33,15 +33,23 @@ echo -e "${C_CYAN}============================================${C_RESET}"
 echo -e "${C_WHITE}    BATLEXP G350 - STOPPING SERVICES        ${C_RESET}"
 echo -e "${C_CYAN}============================================${C_RESET}"
 
-echo -e "${C_YELLOW}[1/2] Stopping OpenSSH server...${C_RESET}"
-sudo killall -9 sshd 2>/dev/null
+echo -e "${C_YELLOW}[1/3] Stopping OpenSSH server...${C_RESET}"
+sudo systemctl stop ssh.socket 2>/dev/null
 sudo systemctl stop ssh 2>/dev/null
+sudo killall -9 sshd 2>/dev/null
 echo -e "      ${C_GREEN}-> SSH server stopped.${C_RESET}"
 
-echo -e "${C_YELLOW}[2/2] Stopping Samba server...${C_RESET}"
+echo -e "${C_YELLOW}[2/3] Stopping Samba server...${C_RESET}"
 sudo systemctl stop smbd 2>/dev/null
 sudo killall -9 smbd 2>/dev/null
 echo -e "      ${C_GREEN}-> Samba server stopped.${C_RESET}"
+
+echo -e "${C_YELLOW}[3/3] Shutting down USB network...${C_RESET}"
+sudo ip route del default dev usb0 2>/dev/null
+sudo ip addr flush dev usb0 2>/dev/null
+sudo ip link set usb0 down 2>/dev/null
+sudo modprobe -r g_ether 2>/dev/null
+echo -e "      ${C_GREEN}-> usb0 down, gadget unloaded.${C_RESET}"
 
 echo -e "${C_CYAN}============================================${C_RESET}"
 echo -e "${C_WHITE} SERVICES STOPPED! Battery saved.           ${C_RESET}"

@@ -191,7 +191,7 @@ Now that your console is running in Wired PC mode with services active, Windows 
 
 This one-time setup consists of two simple steps:
 1. **Set the Static IP on Ethernet 2:** Configure the console's adapter once with `192.168.7.1`. **Keep it configured like this permanently** so direct file transfers always work without IP conflicts!
-2. **Configure Wi-Fi Sharing:** Toggle this on when you want Internet on the console (PortMaster, Scraping), and turn it off when transferring files.
+2. **Configure Wi-Fi Sharing:** Toggle this on when you want Internet on the console (PortMaster, Scraping). File transfers (SFTP) keep working while sharing is on, so you never *have* to turn it off.
 
 ---
 
@@ -258,8 +258,10 @@ Whenever you want the console to access the internet (to download ports in PortM
 * 🌐 **When using Internet on your console (PortMaster, Scraping, Updates):**  
   Turn Wi-Fi sharing **ON** in `ncpa.cpl`.
 * ⚡ **When transferring games & ROMs (WinSCP, FileZilla, Windows Explorer):**  
-  Turn Wi-Fi sharing **OFF** (uncheck sharing in `ncpa.cpl`), and connect directly to **`192.168.7.2`**!  
-  *(Because your `Ethernet 2` adapter is permanently set to `192.168.7.1`, file transfers work instantly at full USB speed without Windows firewall or NAT interference).*
+  Connect to the console IP that matches your current mode:  
+  * **Wi-Fi sharing ON** → Windows moves `Ethernet 2` to `192.168.137.1`, so connect to **`192.168.137.2`**.  
+  * **Wi-Fi sharing OFF** → Windows restores `Ethernet 2` to `192.168.7.1`, so connect to **`192.168.7.2`**.  
+  *(The console answers on both addresses, and its screen shows the active one under `IP ADDR`. You do **not** need to turn sharing off to transfer files.)*
 
 ---
 
@@ -276,7 +278,9 @@ Whenever you want the console to access the internet (to download ports in PortM
 
 ### Workflow B: Transferring ROMs via Windows File Explorer (Samba)
 > [!NOTE]
-> Ensure Windows Wi-Fi sharing is **OFF** in `ncpa.cpl` while transferring files. With `192.168.7.1` permanently configured on `Ethernet 2`, connect directly to `\\192.168.7.2\roms`.
+> **Samba Status:** Samba file sharing has not been fully tested yet. Windows 11 automatically blocks unauthenticated / guest network shares by default, so testing is required.
+> **👉 We recommend Workflow C (SFTP via WinSCP / FileZilla) below.** SFTP connects reliably at native USB 2.0 speeds (~25–35 MB/s) and is 100% tested and verified.
+
 
 1. Plug in the USB cable and press **[A]** in **USB Network Manager**.
 2. On your Windows PC, press `Win + E` to open File Explorer.
@@ -289,9 +293,9 @@ Whenever you want the console to access the internet (to download ports in PortM
 5. Drag and drop your game files directly into your console's game folders (`gba`, `snes`, `psx`, etc.).
 
 ### Workflow C: Transferring ROMs via SFTP (WinSCP / FileZilla)
-> [!WARNING]
-> **Windows Wi-Fi Sharing Must Be OFF:**  
-> When transferring files, Windows cannot be sharing Wi-Fi, otherwise SSH will not connect with the console. With `Ethernet 2` permanently set to `192.168.7.1`, connect directly to `192.168.7.2`.
+> [!NOTE]
+> **Which IP do I use?**  
+> Use the `IP ADDR` shown on the console screen. With Wi-Fi sharing **ON** connect to `192.168.137.2`; with sharing **OFF** connect to `192.168.7.2`. Both work for SFTP, and sharing does not need to be turned off.
 
 > [!TIP]
 > **Don't have WinSCP installed?**  
@@ -299,7 +303,7 @@ Whenever you want the console to access the internet (to download ports in PortM
 > 📥 **[Download WinSCP (Official Site)](https://winscp.net/eng/download.php)**
 
 1. Plug in the USB cable and press **[A]** in **USB Network Manager**.
-2. Ensure Windows Wi-Fi sharing is turned **OFF**.
+2. Note the `IP ADDR` shown on the console screen (`192.168.137.2` with Wi-Fi sharing ON, `192.168.7.2` with it OFF).
 3. Open **WinSCP** on your PC. Click **+** or **New Tab** to add a new connection:  
 
    ![WinSCP Add Connection](ScreenShots/winSCPAddNewConnection.png)  
@@ -307,7 +311,7 @@ Whenever you want the console to access the internet (to download ports in PortM
 
 4. Configure your connection settings:  
    * **Protocol:** `SFTP`  
-   * **Host:** `192.168.7.2` (or `192.168.137.2`)  
+   * **Host:** `192.168.137.2` (sharing ON) or `192.168.7.2` (sharing OFF)  
    * **Port:** `22`  
    * **Username:** `ark`  
    * **Password:** `ark`  
@@ -379,7 +383,7 @@ Double-click **`Test_Internet_On_G350.bat`** on your PC to see live diagnostic o
 **A:** **No, it is NOT required at all!** You only need the single file **`USB_Network_Manager.sh`**. The script is completely self-contained—all detection logic, IP assignments, gateway configuration, SSH/Samba daemons, and hardware mode toggles are built directly into `USB_Network_Manager.sh`. The `.usb_network/` folder is strictly optional for advanced users who want standalone terminal/SSH scripts without the interactive gamepad UI.
 
 ### Q: Why does WinSCP, FileZilla, or SSH fail to connect or time out?
-**A:** When Windows Internet Connection Sharing (ICS) is turned ON, Windows firewall and NAT routing can intercept local inbound traffic to the console. **When transferring files, Windows cannot be sharing Wi-Fi**, otherwise SSH will fail to connect. Simply open `ncpa.cpl`, right-click Wi-Fi -> Properties -> Sharing, and uncheck sharing while transferring files. Once your transfer is complete, you can re-enable sharing if you want to use PortMaster. We are investigating a permanent fix to allow simultaneous internet sharing and direct file transfers in an upcoming update!
+**A:** When Windows Internet Connection Sharing (ICS) is turned ON, Windows firewall and NAT routing can intercept local inbound traffic to the console. Make sure you are using the right IP for your mode: with Wi-Fi sharing **ON**, Windows changes `Ethernet 2` to `192.168.137.1`, so connect to **`192.168.137.2`** (not `192.168.7.2`). With sharing **OFF**, Windows restores `192.168.7.1`, so connect to **`192.168.7.2`**. SFTP works in both modes, so you can transfer files and share internet at the same time.
 
 ---
 
