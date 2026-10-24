@@ -67,22 +67,7 @@ Traditionally, this forced owners to:
 
 Launch **`USB Network Manager`** from **TOOLS** (or **PORTS**) on your console:
 
-```text
-==========================================
-   BATLEXP G350 - USB NETWORK MANAGER     
-==========================================
- USB MODE : WIRED PC (Peripheral)
- IP ADDR  : 192.168.137.2 (usb0)
- GATEWAY  : 192.168.137.1 (Online)
- SSH/SFTP : Port 22 (ark/ark) [RUNNING]
- SAMBA    : \\192.168.137.2\roms [OK]
- INTERNET : ONLINE (PortMaster Ready)
-------------------------------------------
- [A] Start Services (SSH & Net)  [Instant]
- [Y] Stop Services (Save Battery)[Instant]
- [X] Switch to USB HOST Mode     [Reboots]
- [B] Exit to EmulationStation
-```
+![The Handheld Dashboard](ScreenShots/HandheldDashboard.png)
 
 ### Gamepad Controls:
 
