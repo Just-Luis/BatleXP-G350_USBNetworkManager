@@ -32,6 +32,18 @@ C_RED="\033[1;31m"
 C_WHITE="\033[1;37m"
 C_GRAY="\033[0;37m"
 
+# ------------------------------------------------------------------------------
+# Helper: True only if something is really LISTENING on TCP port 22
+# (more reliable than pgrep, which also matches leftover/zombie sshd children)
+# ------------------------------------------------------------------------------
+ssh_listening() {
+    if command -v ss >/dev/null 2>&1; then
+        ss -ltn 2>/dev/null | grep -qE '[:.]22[[:space:]]'
+    else
+        (exec 3<>/dev/tcp/127.0.0.1/22) 2>/dev/null
+    fi
+}
+
 printf "\033c" 2>/dev/null
 clear 2>/dev/null
 
@@ -59,20 +71,29 @@ else
     MODE_STR="${C_CYAN}USB HOST ${C_GREEN}[REBOOT PENDING]${C_RESET}"
 fi
 
-IP_USB0=$(ip -4 addr show dev usb0 2>/dev/null | grep -oP '(?<=inet\s)\d+(\.\d+){3}' | head -n 1)
-[ -z "$IP_USB0" ] && IP_USB0="${C_GRAY}Disconnected${C_RESET}" || IP_USB0="${C_GREEN}$IP_USB0 (usb0)${C_RESET}"
+RAW_GW=$(ip route 2>/dev/null | awk '/default/ {print $3}' | head -n 1)
+ALL_IPS=$(ip -4 addr show dev usb0 2>/dev/null | grep -oP '(?<=inet\s)\d+(\.\d+){3}')
 
-GW=$(ip route 2>/dev/null | awk '/default/ {print $3}' | head -n 1)
-[ -z "$GW" ] && GW="${C_GRAY}None${C_RESET}" || GW="${C_WHITE}$GW (Online)${C_RESET}"
+if [ "$RAW_GW" == "192.168.137.1" ] && echo "$ALL_IPS" | grep -q "^192.168.137.2$"; then
+    ACTIVE_IP="192.168.137.2"
+elif [ "$RAW_GW" == "192.168.7.1" ] && echo "$ALL_IPS" | grep -q "^192.168.7.2$"; then
+    ACTIVE_IP="192.168.7.2"
+else
+    ACTIVE_IP=$(echo "$ALL_IPS" | head -n 1)
+fi
 
-if pgrep sshd >/dev/null 2>&1; then
+[ -z "$ACTIVE_IP" ] && IP_USB0="${C_GRAY}Disconnected${C_RESET}" || IP_USB0="${C_GREEN}$ACTIVE_IP (usb0)${C_RESET}"
+[ -z "$RAW_GW" ] && GW="${C_GRAY}None${C_RESET}" || GW="${C_WHITE}$RAW_GW (Online)${C_RESET}"
+
+if ssh_listening; then
     SSH_STATUS="${C_GREEN}Port 22 (ark/ark) [RUNNING]${C_RESET}"
 else
     SSH_STATUS="${C_RED}STOPPED${C_RESET}"
 fi
 
 if pgrep smbd >/dev/null 2>&1; then
-    SAMBA_STATUS="${C_GREEN}\\\\192.168.137.2\\roms [OK]${C_RESET}"
+    SAMBA_IP="${ACTIVE_IP:-192.168.7.2}"
+    SAMBA_STATUS="${C_GREEN}\\\\${SAMBA_IP}\\roms [OK]${C_RESET}"
 else
     SAMBA_STATUS="${C_GRAY}INACTIVE${C_RESET}"
 fi

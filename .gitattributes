@@ -1,0 +1,10 @@
+# Enforce LF line endings for all Linux shell scripts
+* text=auto
+*.sh text eol=lf
+*.md text eol=lf
+*.py text eol=lf
+
+# Windows scripts use CRLF
+*.bat text eol=crlf
+*.cmd text eol=crlf
+*.ps1 text eol=crlf

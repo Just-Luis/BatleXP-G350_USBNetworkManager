@@ -37,7 +37,7 @@ echo   - Path     : /roms/
 echo.
 echo Windows File Explorer network path: \\!IP!\roms
 echo.
-echo IMPORTANT: Make sure Windows Wi-Fi sharing is OFF during file transfers!
+echo TIP: Use the IP shown above. Wi-Fi sharing ON = 192.168.137.2, OFF = 192.168.7.2.
 echo ============================================================
 echo.
 goto :end
