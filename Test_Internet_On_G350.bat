@@ -1,10 +1,10 @@
 @echo off
 setlocal EnableDelayedExpansion
-title BatleXP G350 - Internet Tethering Test
+title Battle XP G350 - Internet Tethering Test
 color 0B
 
 echo ============================================================
-echo   BATLEXP G350 - INTERNET TETHERING TEST
+echo   BATTLE XP G350 - INTERNET TETHERING TEST
 echo ============================================================
 echo.
 

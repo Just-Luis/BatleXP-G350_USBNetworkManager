@@ -1,12 +1,12 @@
-# 🎮 BatleXP G350 USB Network Manager
+# 🎮 Battle XP G350 USB Network Manager
 
-> **Direct USB wired tethering, PortMaster downloads, high-speed SFTP transfers, and Samba file sharing for the BatleXP G350 and Rockchip RK3326 handhelds running ArkOS / dArkOS.**
+> **Direct USB wired tethering, PortMaster downloads, high-speed SFTP transfers, and Samba file sharing for the Battle XP G350 and Rockchip RK3326 handhelds running ArkOS / dArkOS.**
 
 [![Platform](https://img.shields.io/badge/Platform-Rockchip%20RK3326-blue.svg)](https://en.wikipedia.org/wiki/Rockchip)
 [![OS](https://img.shields.io/badge/OS-dArkOS%20%2F%20ArkOS-red.svg)](https://github.com/christianhaitian/arkos)
 [![UI](https://img.shields.io/badge/Controls-Gamepad%20Driven-green.svg)](https://github.com)
 [![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![Tested On](https://img.shields.io/badge/Tested%20Device-BatleXP%20G350-purple.svg)](https://github.com)
+[![Tested On](https://img.shields.io/badge/Tested%20Device-Battle%20XP%20G350-purple.svg)](https://github.com)
 
 ---
 
@@ -27,17 +27,17 @@
 
 ### 📋 GitHub Repository Setup (For Maintainers)
 If you are publishing or cloning this repository, here is the recommended metadata:
-* **Repository Name:** `BatleXP-G350-USB-Network-Manager`
+* **Repository Name:** `Battle-XP-G350-USB-Network-Manager`
 * **Short Description (About box):**  
-  `Direct USB PC tethering, PortMaster internet access, high-speed SFTP/Samba transfers, and hardware USB mode switcher for BatleXP G350 (RK3326) on ArkOS.`
+  `Direct USB PC tethering, PortMaster internet access, high-speed SFTP/Samba transfers, and hardware USB mode switcher for Battle XP G350 (RK3326) on ArkOS.`
 * **Topics / Tags:**  
-  `arkos`, `rk3326`, `batlexp-g350`, `portmaster`, `retro-handheld`, `rndis`, `usb-ethernet`, `sftp`, `retrogaming`, `emulationstation`
+  `arkos`, `rk3326`, `battle-xp-g350`, `portmaster`, `retro-handheld`, `rndis`, `usb-ethernet`, `sftp`, `retrogaming`, `emulationstation`
 
 ---
 
 ## 💡 Why This Project?
 
-The **BatleXP G350** is an incredible budget retro gaming handheld powered by the Rockchip RK3326 SoC, but it suffers from one major limitation: **it has no internal Wi-Fi chip**.
+The **Battle XP G350** is an incredible budget retro gaming handheld powered by the Rockchip RK3326 SoC, but it suffers from one major limitation: **it has no internal Wi-Fi chip**.
 
 Traditionally, this forced owners to:
 * 🛑 **Repeatedly remove the MicroSD card** to add games, risking card corruption and wearing out the spring-loaded slot.
@@ -160,7 +160,7 @@ Open Network Connections on your Windows PC (`Win + R`, type `ncpa.cpl`, and hit
 
 ## 🛠️ Hardware & OS Compatibility
 
-* **Primary Target:** BatleXP G350 (Rockchip RK3326) running dArkOS / ArkOS.
+* **Primary Target:** Battle XP G350 (Rockchip RK3326) running dArkOS / ArkOS.
 * **Compatible Devices:** Other RK3326-based handhelds running ArkOS (e.g. Anbernic RG351P/M/V, Powkiddy RGB20S, RK2020) with single USB-C OTG ports.
 
 ---

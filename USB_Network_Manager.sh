@@ -1,7 +1,7 @@
 #!/bin/bash
 # ==============================================================================
 # Script: USB_Network_Manager.sh
-# Device: BatleXP G350 / RK3326 Handhelds (dArkOS / ArkOS)
+# Device: Battle XP G350 / RK3326 Handhelds (dArkOS / ArkOS)
 # Layout: Tailored for 3.5" Handhelds (Max 44 cols x 16 rows, zero overflow)
 # ==============================================================================
 
@@ -273,7 +273,7 @@ draw_menu() {
     detect_status
 
     echo -e "${C_CYAN}==========================================${C_RESET}"
-    echo -e "${C_WHITE}   BATLEXP G350 - USB NETWORK MANAGER     ${C_RESET}"
+    echo -e "${C_WHITE} BATTLE XP G350 - USB NETWORK MANAGER ${C_RESET}"
     echo -e "${C_CYAN}==========================================${C_RESET}"
     echo -e " ${C_WHITE}USB MODE :${C_RESET} $STATUS_MODE"
     echo -e " ${C_WHITE}IP ADDR  :${C_RESET} $STATUS_IP"

@@ -1,10 +1,10 @@
 @echo off
 setlocal EnableDelayedExpansion
-title BatleXP G350 - Connection Test
+title Battle XP G350 - Connection Test
 color 0B
 
 echo ============================================================
-echo        BATLEXP G350 - USB CABLE CONNECTION TEST
+echo        BATTLE XP G350 - USB CABLE CONNECTION TEST
 echo ============================================================
 echo.
 echo Checking connection to the console...
