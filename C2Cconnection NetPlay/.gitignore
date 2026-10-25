@@ -1,0 +1,17 @@
+# Operating System Clutter
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+.DS_Store
+
+# Temporary screenshots & cache
+*.png
+*.log
+*.tmp
+__pycache__/
+*.pyc
+
+# IDE files
+.vscode/
+.idea/

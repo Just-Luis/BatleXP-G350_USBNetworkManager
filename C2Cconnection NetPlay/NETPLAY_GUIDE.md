@@ -42,32 +42,31 @@ Two handhelds connected directly together over USB communicate using an isolated
 
 ---
 
-## 2. Installing the Scripts on Both Consoles (Where to Put Them)
+## 2. Installing the Script on Both Consoles (Where to Put It)
 
-To use wired C2C Netplay, you need two scripts copied onto the MicroSD cards of **both consoles**:
-* **[`USB_Network_Manager.sh`](../USB_Network_Manager.sh):** The hardware manager used to configure Host and Peripheral modes.
-* **[`C2C_Netplay_Prep.sh`](C2C_Netplay_Prep.sh):** The one-click Netplay initializer and port monitor.
+To use wired C2C Netplay, you only need **a single script** copied onto the MicroSD cards of **both consoles**:
+* **[`C2C_Netplay_Prep.sh`](C2C_Netplay_Prep.sh):** The complete all-in-one Netplay initializer, first-launch role wizard, and diagnostic monitor.
+
+*(Note: [`USB_Network_Manager.sh`](../USB_Network_Manager.sh) is only needed if you also want PC file transfers or Wi-Fi internet tethering; pure Netplay players only need `C2C_Netplay_Prep.sh`!)*
 
 ---
 
-### 📁 Where to Put the Files on Your SD Card
+### 📁 Where to Put the File on Your SD Card
 
-When you insert your console's MicroSD card (the ROMs / `EASYROMS` partition) into your computer, copy the scripts into the following location:
+When you insert your console's MicroSD card (the ROMs / `EASYROMS` partition) into your computer, copy the script into the following location:
 
 ```text
 EASYROMS/ (or roms/)
 ├── tools/                         <-- ⭐ STRONGLY RECOMMENDED LOCATION
-│   ├── USB_Network_Manager.sh     (Appears under the "TOOLS" menu in EmulationStation)
 │   └── C2C_Netplay_Prep.sh        (Appears under the "TOOLS" menu in EmulationStation)
 └── ports/                         <-- Alternative location if your theme lacks a Tools menu
-    ├── USB_Network_Manager.sh
     └── C2C_Netplay_Prep.sh
 ```
 
 > [!TIP]
-> **Recommended Folder:** Paste both `.sh` files into the **`tools/`** folder.  
-> When placed in `tools/`, they appear directly under the **TOOLS** system in EmulationStation (alongside *PortMaster* and *ThemeMaster*).  
-> If your ArkOS theme does not show a Tools menu, paste them into the **`ports/`** folder instead (they will appear in the **PORTS** section).
+> **Recommended Folder:** Paste `C2C_Netplay_Prep.sh` into the **`tools/`** folder.  
+> When placed in `tools/`, it appears directly under the **TOOLS** system in EmulationStation (alongside *PortMaster* and *ThemeMaster*).  
+> If your ArkOS theme does not show a Tools menu, paste it into the **`ports/`** folder instead (it will appear in the **PORTS** section).
 
 ---
 
@@ -75,34 +74,28 @@ EASYROMS/ (or roms/)
 
 #### Method A: Direct SD Card Copy (Easiest & Recommended)
 1. Safely shut down **Console 1** (`Start` ➔ `Quit` ➔ `Shutdown System`).
-2. Remove the MicroSD card (Slot 2 / TF2 if you use a dual-card setup, or Slot 1 if single card) and connect it to your PC.
+2. Remove the MicroSD card and connect it to your PC.
 3. Open the **`EASYROMS`** (or `roms`) partition in Windows File Explorer or Mac Finder.
-4. Copy `USB_Network_Manager.sh` and `C2C_Netplay_Prep.sh` into the **`tools/`** folder.
+4. Copy `C2C_Netplay_Prep.sh` into the **`tools/`** folder.
 5. Safely eject the card, insert it back into Console 1, and turn it on.
 6. **Repeat steps 1 through 5 for Console 2.**
 
-#### Method B: Over the Network via SFTP / Samba (If already tethered to PC)
-If Console 2 is already connected to your PC in Wired PC mode:
-* **Windows File Explorer (Samba):** Open `\\192.168.137.2\roms\tools\` and paste `C2C_Netplay_Prep.sh`.
-* **SFTP (WinSCP / FileZilla):** Connect to `192.168.137.2` (port `22`, username `ark`, password `ark`) and transfer `C2C_Netplay_Prep.sh` into `/roms/tools/`.
+#### Method B: Over the Network via SFTP (If already tethered to PC)
+* Connect to `192.168.137.2` (port `22`, username `ark`, password `ark`) and transfer `C2C_Netplay_Prep.sh` into `/roms/tools/`.
 
 ---
 
-## 3. Why USB Network Manager is Mandatory
+## 3. The Golden Rule of Hardware Roles
 
 The Rockchip RK3326 SoC inside the Battle XP G350 features **a single USB 2.0 OTG controller**. 
 
-By default from the factory:
-* Handhelds run in **USB Host Mode** (`dr_mode = "host"`), designed for external USB drives, keyboards, or Wi-Fi dongles.
-* If two consoles are connected together while **both** are in Host mode, neither acts as a USB device (gadget). No `usb0` network interface is created, and no communication can occur.
-* Conversely, if both were in Peripheral mode, neither would power the bus or initialize the link.
+For two consoles to link directly over a USB cable:
+* **Console 1 (Player 1 / Host):** MUST be set to **USB HOST Mode**.
+* **Console 2 (Player 2 / Client):** MUST be set to **WIRED PC Mode (Peripheral)**.
 
 > [!IMPORTANT]
-> **The Golden Rule of Console-to-Console (C2C):**
-> * **Console 1 (Player 1 / Host):** MUST be set to **USB HOST Mode**.
-> * **Console 2 (Player 2 / Client):** MUST be set to **WIRED PC Mode (Peripheral)**.
-> 
-> You use **`USB_Network_Manager.sh`** on each console to switch and lock in these hardware modes.
+> **You do NOT need external tools to configure this!**  
+> `C2C_Netplay_Prep.sh` features a built-in **First-Launch Setup Wizard** and an embedded Device Tree generator. On first run, it will directly ask which console is Player 1 and which is Player 2, and automatically configure the hardware for you.
 
 ---
 
@@ -128,41 +121,55 @@ USB-C port configurations vary across RK3326 handheld devices:
 
 ---
 
-## 5. Phase 1: Hardware Mode Setup (USB Network Manager)
+## 5. Phase 1: First-Launch Setup Wizard (Automatic Role Assignment)
 
-You only need to do this step once (or whenever switching roles).
+You only need to do this step **once** when first launching the tool.
 
-### On Console 1 (Player 1 - Host):
-1. In EmulationStation, go to **TOOLS** (or **PORTS**).
-2. Launch **`USB Network Manager`** (`USB_Network_Manager.sh`).
-3. Look at the **`USB MODE`** line:
-   * If it says **`USB HOST (OTG Pendrives)`**: It is already in Host mode! Press **`[B]`** to exit.
-   * If it says **`WIRED PC (Peripheral)`**: Press **`[X]`** (*Switch to USB HOST Mode*). Allow the console to reboot.
-4. After rebooting, Console 1 is now permanently configured as **USB Host**.
+Launch **`C2C Netplay Prep`** (`C2C_Netplay_Prep.sh`) from **TOOLS** on **both consoles**.
 
-### On Console 2 (Player 2 - Peripheral / Client):
-1. In EmulationStation, launch **`USB Network Manager`**.
-2. Look at the **`USB MODE`** line:
-   * If it says **`WIRED PC (Peripheral)`**: It is already in Peripheral mode! Press **`[B]`** to exit.
-   * If it says **`USB HOST`**: Press **`[X]`** (*Switch to WIRED PC Mode*). Allow the console to reboot.
-3. After rebooting, Console 2 is now permanently configured as **Peripheral**.
+### What you will see on First Launch:
+```text
+==========================================
+   C2C NETPLAY — FIRST TIME SETUP         
+==========================================
+ Choose the role for this console:
 
-> [!NOTE]
-> You **do NOT** need to press `[A]` (Start Services) inside USB Network Manager for Netplay. 
-> `C2C_Netplay_Prep.sh` will automatically configure and claim the network interface specifically for Netplay.
+ [A] PLAYER 1  (Host / Room Creator)
+     • Starts Netplay room in RetroArch
+     • Uses USB-C OTG Host adapter
+
+ [X] PLAYER 2  (Client / Joiner)
+     • Connects to Player 1 directly
+     • Reboots to activate Client mode
+
+ [B] Exit to EmulationStation
+==========================================
+```
+
+### Action for Each Console:
+1. **On Console 1 (Player 1 / Host):**
+   * Press **`[A]`** *(PLAYER 1)*.
+   * Factory handhelds already default physically to Host mode, so **no reboot is required!**
+   * Console 1 immediately enters the active Netplay dashboard.
+2. **On Console 2 (Player 2 / Client):**
+   * Press **`[X]`** *(PLAYER 2)*.
+   * The script automatically generates the Peripheral Device Tree profile and safely reboots the console in 3 seconds.
+   * After reboot, launch **`C2C Netplay Prep`** again. It will automatically load as **Player 2** without asking again!
+
+> [!TIP]
+> **Need to switch roles later?**  
+> On the main Netplay dashboard, you can simply press **`[X]`** anytime to switch roles (`[X] Make P2` or `[X] Make P1`).
 
 ---
 
-## 6. Phase 2: Netplay Preparation (`C2C_Netplay_Prep.sh`)
+## 6. Phase 2: Live Connection & Port Monitoring
 
-Once the hardware modes are set, connect the USB cable between both consoles' `OTG` ports.
-
-Launch **`C2C Netplay Prep`** (`C2C_Netplay_Prep.sh`) from **TOOLS** on **both consoles**.
+Now connect your USB cable (with OTG Host adapter on Console 1). Both consoles should be running **`C2C Netplay Prep`**.
 
 ### What the Prep Script Does Automatically:
 1. **Assigns Static IPs:**
    * Console 1 (Host) gets `192.168.10.1`.
-   * Console 2 (Peripheral) gets `192.168.10.2`.
+   * Console 2 (Client) gets `192.168.10.2`.
 2. **Claims Interface & Eliminates Conflicts:**
    * Kills background DHCP clients and Avahi daemons that assign `169.254.x.x` link-local addresses.
    * Disables reverse-path filtering (`rp_filter = 0`).
@@ -172,19 +179,20 @@ Launch **`C2C Netplay Prep`** (`C2C_Netplay_Prep.sh`) from **TOOLS** on **both c
    * Sets `netplay_public_announce = "false"`.
    * Sets `netplay_ip_port = "55435"`.
    * On Console 2, automatically pre-configures `netplay_ip_address = "192.168.10.1"`.
+   * Restores `ark:ark` file permissions so RetroArch can save configurations on quit.
 
 ### Check the Screen on Both Consoles:
 * **Console 1 Screen:**
   ```text
-  LOCAL ROLE : [HOST] (192.168.10.1)
-  PEER ROLE  : [PERIPHERAL] (192.168.10.2)
+  LOCAL ROLE : [HOST] Player 1 (192.168.10.1)
+  PEER ROLE  : [CLIENT] Player 2 (192.168.10.2)
   CABLE LINK : CONNECTED [CARRIER OK]
   PING TEST  : ONLINE [OK]
   ```
 * **Console 2 Screen:**
   ```text
-  LOCAL ROLE : [PERIPHERAL] (192.168.10.2)
-  PEER ROLE  : [HOST] (192.168.10.1)
+  LOCAL ROLE : [CLIENT] Player 2 (192.168.10.2)
+  PEER ROLE  : [HOST] Player 1 (192.168.10.1)
   CABLE LINK : CONNECTED [CARRIER OK]
   PING TEST  : ONLINE [OK]
   ```

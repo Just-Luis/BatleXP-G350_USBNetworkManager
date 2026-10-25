@@ -114,6 +114,7 @@ else
     echo -e "      ${C_GREEN}-> Gateway: 192.168.7.1 (Direct PC)${C_RESET}"
 fi
 
+sudo rm -f /etc/resolv.conf 2>/dev/null
 echo -e "nameserver 1.1.1.1\nnameserver 8.8.8.8" | sudo tee /etc/resolv.conf >/dev/null
 
 echo -e "${C_YELLOW}[2/4] Starting fast OpenSSH server...${C_RESET}"

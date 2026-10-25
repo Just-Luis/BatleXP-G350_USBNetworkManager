@@ -82,6 +82,10 @@ if [ "$RAW_GW" == "192.168.137.1" ] && echo "$ALL_IPS" | grep -q "^192.168.137.2
     ACTIVE_IP="192.168.137.2"
 elif [ "$RAW_GW" == "192.168.7.1" ] && echo "$ALL_IPS" | grep -q "^192.168.7.2$"; then
     ACTIVE_IP="192.168.7.2"
+elif echo "$ALL_IPS" | grep -q "^192.168.137.2$"; then
+    ACTIVE_IP="192.168.137.2"
+elif echo "$ALL_IPS" | grep -q "^192.168.7.2$"; then
+    ACTIVE_IP="192.168.7.2"
 else
     ACTIVE_IP=$(echo "$ALL_IPS" | head -n 1)
 fi
@@ -102,7 +106,8 @@ else
     SAMBA_STATUS="${C_GRAY}INACTIVE${C_RESET}"
 fi
 
-if ping -c 1 -W 1 8.8.8.8 >/dev/null 2>&1; then
+# Check Internet Connectivity (only if an active gateway route is present)
+if [ -n "$RAW_GW" ] && [ -n "$ACTIVE_IP" ] && ping -c 1 -W 1 8.8.8.8 >/dev/null 2>&1; then
     NET_STATUS="${C_GREEN}ONLINE (PortMaster Ready)${C_RESET}"
 else
     NET_STATUS="${C_GRAY}OFFLINE${C_RESET}"

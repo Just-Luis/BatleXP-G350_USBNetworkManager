@@ -134,25 +134,14 @@ Open Network Connections on your Windows PC (`Win + R`, type `ncpa.cpl`, and hit
 
 ---
 
-## 🎮 Direct Console-to-Console (C2C) Netplay & Multiplayer
+## 🎮 Looking for 2-Player Wired USB NetPlay?
 
-Connect two Battle XP G350 (or RK3326 ArkOS) handhelds directly together via a USB cable for **zero-latency, sub-millisecond offline multiplayer**.
+Connect two Battle XP G350 (or RK3326 ArkOS) handhelds directly together via a USB cable for **zero-latency, sub-millisecond offline multiplayer** with no Wi-Fi, router, or hotspot!
 
-> 📖 **Complete Walkthrough:**
-> * **[C2Cconnection NetPlay/NETPLAY_GUIDE.md](C2Cconnection%20NetPlay/NETPLAY_GUIDE.md):** Comprehensive step-by-step 2-player RetroArch Netplay setup, port monitoring, and hardware rules.
-
-### ⚡ How C2C Works:
-1. **Hardware Role Requirement:**
-   * **Console 1 (Player 1 / Host):** Set to **USB HOST Mode** via `USB_Network_Manager.sh`.
-   * **Console 2 (Player 2 / Client):** Set to **WIRED PC Mode (Peripheral)** via `USB_Network_Manager.sh`.
-2. **Safe Cabling:**
-   * **⭐ Best & Safest:** Use a **USB-C Male to USB-A Female OTG adapter** on **Console 1 (Host)** connected via a standard **USB-A to USB-C cable** to **Console 2**.
-   * ⚠️ *Avoid direct USB-C to USB-C cables, as budget handhelds lack CC pull-down resistors and can risk reverse 5V battery damage.*
-3. **1-Click Netplay Preparation:**
-   * Copy **`C2C_Netplay_Prep.sh`** to **`tools/`** (or **`ports/`**) on both consoles' SD cards and launch it from EmulationStation. It automatically assigns static IPs (`192.168.10.1` and `192.168.10.2`), kills conflicting link-local daemons, and patches `retroarch.cfg` to disable Relay Servers and NAT Traversal offline.
-4. **Instant 2-Player Gaming:**
-   * Player 1 launches game ➔ `[Select] + [X]` ➔ **Netplay** ➔ **Host** ➔ **Start Netplay Host**.
-   * Player 2 launches game ➔ `[Select] + [X]` ➔ **Netplay** ➔ **Connect to Netplay Host**.
+> 🔗 **Dedicated Project:**  
+> Wired 2-Player Netplay is available as a completely independent, single-script project:  
+> 👉 **[`C2Cconnection NetPlay/`](C2Cconnection%20NetPlay/)** *(or the standalone **[RK3326-USB-Netplay](C2Cconnection%20NetPlay/README.md)** repository)*.  
+> Includes the all-in-one `C2C_Netplay_Prep.sh` with automatic First-Launch Role Wizard and RetroArch offline auto-patching!
 
 ---
 
@@ -160,12 +149,12 @@ Connect two Battle XP G350 (or RK3326 ArkOS) handhelds directly together via a U
 
 | File / Directory | Purpose |
 | :--- | :--- |
-| **[`USB_Network_Manager.sh`](USB_Network_Manager.sh)** | **The main console tool.** Single self-contained script for PC tethering and hardware mode switching. |
-| **[`C2Cconnection NetPlay/`](C2Cconnection%20NetPlay/)** | **2-Player Netplay Suite.** Contains `C2C_Netplay_Prep.sh` and the complete `NETPLAY_GUIDE.md`. |
+| **[`USB_Network_Manager.sh`](USB_Network_Manager.sh)** | **The main console tool.** Single self-contained script for PC tethering, SSH/SFTP, Samba, and hardware mode switching. |
 | **[`COMMUNITY_TUTORIAL.md`](COMMUNITY_TUTORIAL.md)** | **Complete Community Guide.** In-depth PC tethering tutorial with detailed walkthroughs and FAQs. |
 | **[`Test_Internet_On_G350.bat`](Test_Internet_On_G350.bat)** | 1-Click Windows batch tool to test physical link, remote ping (8.8.8.8), and DNS resolution. |
 | **[`Test_Connection_G350.bat`](Test_Connection_G350.bat)** | 1-Click Windows batch script to test local USB connection and SSH port 22 response. |
-| **[`.usb_network/`](.usb_network/)** | Modular sub-scripts, headless CLI helpers (`c2c_setup.sh`), and gamepad visualizer (`C2C_Connection_Test.sh`). |
+| **[`C2Cconnection NetPlay/`](C2Cconnection%20NetPlay/)** | **2-Player Netplay Suite.** Standalone project containing `C2C_Netplay_Prep.sh`, `Revert_Netplay.sh`, and `README.md`. |
+| **[`.usb_network/`](.usb_network/)** | Modular sub-scripts, headless CLI helpers (`c2c_setup.sh`), clean install testing tool (`Revert_Netplay.sh`), and gamepad visualizer. |
 
 ---
 
