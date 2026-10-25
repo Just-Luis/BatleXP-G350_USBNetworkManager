@@ -149,7 +149,7 @@ Connect two Battle XP G350 (or RK3326 ArkOS) handhelds directly together via a U
    * **⭐ Best & Safest:** Use a **USB-C Male to USB-A Female OTG adapter** on **Console 1 (Host)** connected via a standard **USB-A to USB-C cable** to **Console 2**.
    * ⚠️ *Avoid direct USB-C to USB-C cables, as budget handhelds lack CC pull-down resistors and can risk reverse 5V battery damage.*
 3. **1-Click Netplay Preparation:**
-   * Run **`C2C_Netplay_Prep.sh`** from **`C2Cconnection NetPlay/`** on both consoles. It automatically assigns static IPs (`192.168.10.1` and `192.168.10.2`), kills conflicting link-local daemons, and patches `retroarch.cfg` to disable Relay Servers and NAT Traversal offline.
+   * Copy **`C2C_Netplay_Prep.sh`** to **`tools/`** (or **`ports/`**) on both consoles' SD cards and launch it from EmulationStation. It automatically assigns static IPs (`192.168.10.1` and `192.168.10.2`), kills conflicting link-local daemons, and patches `retroarch.cfg` to disable Relay Servers and NAT Traversal offline.
 4. **Instant 2-Player Gaming:**
    * Player 1 launches game ➔ `[Select] + [X]` ➔ **Netplay** ➔ **Host** ➔ **Start Netplay Host**.
    * Player 2 launches game ➔ `[Select] + [X]` ➔ **Netplay** ➔ **Connect to Netplay Host**.
