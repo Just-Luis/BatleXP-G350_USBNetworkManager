@@ -1,7 +1,7 @@
 #!/bin/bash
 # ==============================================================================
 # Script: C2C_Netplay_Prep.sh
-# Directory: C2Cconnection/
+# Directory: C2Cconnection NetPlay/
 # Device: Battle XP G350 & Rockchip RK3326 Handhelds (ArkOS / dArkOS)
 # Layout: Tailored for 3.5" Handhelds (Max 42 cols x 16 rows, zero overflow)
 # Purpose: Interactive RetroArch Netplay Initializer & Port 55435 Monitor

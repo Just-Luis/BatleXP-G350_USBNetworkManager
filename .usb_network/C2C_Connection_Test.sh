@@ -1,7 +1,7 @@
 #!/bin/bash
 # ==============================================================================
 # Script: C2C_Connection_Test.sh
-# Directory: C2Cconnection/
+# Directory: .usb_network/
 # Device: Battle XP G350 & Rockchip RK3326 Handhelds (ArkOS / dArkOS)
 # Layout: Tailored for 3.5" Handhelds (Max 42 cols x 16 rows, zero overflow)
 # Purpose: Direct Console-to-Console (C2C) USB Connection Verification &
