@@ -231,6 +231,10 @@ detect_status() {
         ACTIVE_IP="192.168.137.2"
     elif [ "$RAW_GW" == "192.168.7.1" ] && echo "$ALL_IPS" | grep -q "^192.168.7.2$"; then
         ACTIVE_IP="192.168.7.2"
+    elif echo "$ALL_IPS" | grep -q "^192.168.137.2$"; then
+        ACTIVE_IP="192.168.137.2"
+    elif echo "$ALL_IPS" | grep -q "^192.168.7.2$"; then
+        ACTIVE_IP="192.168.7.2"
     else
         ACTIVE_IP=$(echo "$ALL_IPS" | head -n 1)
     fi
@@ -262,8 +266,8 @@ detect_status() {
         STATUS_SAMBA="${C_GRAY}INACTIVE${C_RESET}"
     fi
 
-    # Check Internet Connectivity
-    if ping -c 1 -W 1 8.8.8.8 >/dev/null 2>&1; then
+    # Check Internet Connectivity (only if an active gateway route is present)
+    if [ -n "$RAW_GW" ] && [ -n "$ACTIVE_IP" ] && ping -c 1 -W 1 8.8.8.8 >/dev/null 2>&1; then
         STATUS_NET="${C_GREEN}ONLINE (PortMaster Ready)${C_RESET}"
     else
         STATUS_NET="${C_GRAY}OFFLINE${C_RESET}"
@@ -274,24 +278,28 @@ detect_status() {
 # Helper: Draw Main Interactive Menu (strictly 14 rows, max 42 cols)
 # ------------------------------------------------------------------------------
 draw_menu() {
-    printf "\033c" 2>/dev/null
-    clear 2>/dev/null
+    if [ "$1" == "refresh" ]; then
+        printf "\033[H" 2>/dev/null
+    else
+        printf "\033c" 2>/dev/null
+        clear 2>/dev/null
+    fi
     detect_status
 
-    echo -e "${C_CYAN}==========================================${C_RESET}"
-    echo -e "${C_WHITE} BATTLE XP G350 - USB NETWORK MANAGER ${C_RESET}"
-    echo -e "${C_CYAN}==========================================${C_RESET}"
-    echo -e " ${C_WHITE}USB MODE :${C_RESET} $STATUS_MODE"
-    echo -e " ${C_WHITE}IP ADDR  :${C_RESET} $STATUS_IP"
-    echo -e " ${C_WHITE}GATEWAY  :${C_RESET} $STATUS_GW"
-    echo -e " ${C_WHITE}SSH/SFTP :${C_RESET} $STATUS_SSH"
-    echo -e " ${C_WHITE}SAMBA    :${C_RESET} $STATUS_SAMBA"
-    echo -e " ${C_WHITE}INTERNET :${C_RESET} $STATUS_NET"
-    echo -e "${C_CYAN}------------------------------------------${C_RESET}"
-    echo -e " $START_TEXT"
-    echo -e " ${C_RED}[Y]${C_RESET} ${C_WHITE}Stop Services (Save Battery)[Instant]${C_RESET}"
-    echo -e " ${C_YELLOW}[X]${C_RESET} ${C_WHITE}$SWITCH_TEXT${C_RESET}"
-    echo -e " ${C_CYAN}[B]${C_RESET} ${C_WHITE}Exit to EmulationStation${C_RESET}"
+    echo -e "${C_CYAN}==========================================${C_RESET}\033[K"
+    echo -e "${C_WHITE} BATTLE XP G350 - USB NETWORK MANAGER ${C_RESET}\033[K"
+    echo -e "${C_CYAN}==========================================${C_RESET}\033[K"
+    echo -e " ${C_WHITE}USB MODE :${C_RESET} $STATUS_MODE\033[K"
+    echo -e " ${C_WHITE}IP ADDR  :${C_RESET} $STATUS_IP\033[K"
+    echo -e " ${C_WHITE}GATEWAY  :${C_RESET} $STATUS_GW\033[K"
+    echo -e " ${C_WHITE}SSH/SFTP :${C_RESET} $STATUS_SSH\033[K"
+    echo -e " ${C_WHITE}SAMBA    :${C_RESET} $STATUS_SAMBA\033[K"
+    echo -e " ${C_WHITE}INTERNET :${C_RESET} $STATUS_NET\033[K"
+    echo -e "${C_CYAN}------------------------------------------${C_RESET}\033[K"
+    echo -e " $START_TEXT\033[K"
+    echo -e " ${C_RED}[Y]${C_RESET} ${C_WHITE}Stop Services (Save Battery)[Instant]${C_RESET}\033[K"
+    echo -e " ${C_YELLOW}[X]${C_RESET} ${C_WHITE}$SWITCH_TEXT${C_RESET}\033[K"
+    echo -e " ${C_CYAN}[B]${C_RESET} ${C_WHITE}Exit to EmulationStation${C_RESET}\033[K"
 }
 
 # ------------------------------------------------------------------------------
@@ -390,6 +398,7 @@ start_services() {
         echo -e "      ${C_GREEN}-> Gateway: 192.168.7.1 (Direct PC)${C_RESET}"
     fi
 
+    sudo rm -f /etc/resolv.conf 2>/dev/null
     echo -e "nameserver 1.1.1.1\nnameserver 8.8.8.8" | sudo tee /etc/resolv.conf >/dev/null
 
     echo -e "${C_YELLOW}[2/4] Starting fast OpenSSH server...${C_RESET}"
@@ -549,8 +558,11 @@ switch_hardware_mode() {
 # ------------------------------------------------------------------------------
 # Main Application Loop
 # ------------------------------------------------------------------------------
+REFRESH_MODE=""
 while true; do
-    draw_menu
+    draw_menu "$REFRESH_MODE"
+    REFRESH_MODE=""
+    LAST_REFRESH=$SECONDS
 
     # Polling loop for Gamepad and Keyboard input
     while true; do
@@ -603,6 +615,12 @@ while true; do
                 exit 0
                 ;;
         esac
+
+        # 3. Periodic Auto-Refresh (every ~4 seconds while idle)
+        if [ $((SECONDS - LAST_REFRESH)) -ge 4 ]; then
+            REFRESH_MODE="refresh"
+            break
+        fi
 
         sleep 0.05
     done

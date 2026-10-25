@@ -1,0 +1,9 @@
+# Set default behavior to automatically normalize line endings
+* text=auto
+
+# Enforce strict LF on Linux scripts and documentation
+*.sh text eol=lf
+*.py text eol=lf
+*.md text eol=lf
+*.cfg text eol=lf
+*.txt text eol=lf
