@@ -71,7 +71,14 @@ echo -e "${C_WHITE}   BATTLE XP G350 - STARTING SERVICES       ${C_RESET}"
 echo -e "${C_CYAN}============================================${C_RESET}"
 
 # Check Hardware Mode
-if [ -d /sys/class/udc ] && [ -n "$(ls -A /sys/class/udc 2>/dev/null)" ]; then
+IS_PERI=0
+if [ -f /proc/device-tree/usb@ff300000/dr_mode ] && grep -aq "peripheral" /proc/device-tree/usb@ff300000/dr_mode 2>/dev/null; then
+    IS_PERI=1
+elif [ -f /sys/firmware/devicetree/base/usb@ff300000/dr_mode ] && grep -aq "peripheral" /sys/firmware/devicetree/base/usb@ff300000/dr_mode 2>/dev/null; then
+    IS_PERI=1
+fi
+
+if [ "$IS_PERI" -eq 1 ]; then
     echo -e " Mode: ${C_GREEN}WIRED PC (Peripheral)${C_RESET} [READY]"
 else
     echo -e " ${C_RED}[!] WARNING: Console is in USB HOST MODE!${C_RESET}"

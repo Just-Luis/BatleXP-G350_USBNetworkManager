@@ -161,7 +161,9 @@ echo -e "${C_CYAN}============================================${C_RESET}"
 echo -e "${C_WHITE}   BATTLE XP G350 - SWITCH USB MODE         ${C_RESET}"
 echo -e "${C_CYAN}============================================${C_RESET}"
 
-if [ -d /sys/class/udc ] && [ -n "$(ls -A /sys/class/udc 2>/dev/null)" ]; then
+if [ -f /proc/device-tree/usb@ff300000/dr_mode ] && grep -aq "peripheral" /proc/device-tree/usb@ff300000/dr_mode 2>/dev/null; then
+    RUN_MODE="${C_GREEN}WIRED PC (Peripheral)${C_RESET}"
+elif [ -f /sys/firmware/devicetree/base/usb@ff300000/dr_mode ] && grep -aq "peripheral" /sys/firmware/devicetree/base/usb@ff300000/dr_mode 2>/dev/null; then
     RUN_MODE="${C_GREEN}WIRED PC (Peripheral)${C_RESET}"
 else
     RUN_MODE="${C_YELLOW}USB HOST (OTG Pendrives)${C_RESET}"
@@ -172,7 +174,7 @@ if [ -f /boot/rk3326-g350-peripheral.dtb ] && cmp -s /boot/rk3326-g350-linux.dtb
 elif [ -f /boot/rk3326-g350-host.dtb ] && cmp -s /boot/rk3326-g350-linux.dtb /boot/rk3326-g350-host.dtb; then
     CONFIG_MODE="${C_YELLOW}USB HOST (OTG Pendrives)${C_RESET}"
 else
-    CONFIG_MODE="${C_WHITE}Default / Custom${C_RESET}"
+    CONFIG_MODE="${C_YELLOW}USB HOST (Factory Default)${C_RESET}"
 fi
 
 echo -e " ${C_WHITE}ACTIVE MODE:${C_RESET} $RUN_MODE"

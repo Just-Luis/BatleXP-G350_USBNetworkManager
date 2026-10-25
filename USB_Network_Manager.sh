@@ -177,9 +177,14 @@ detect_status() {
     ensure_dtb_profiles
 
     # 1. Detect Running Kernel Hardware Mode
-    if [ -d /sys/class/udc ] && [ -n "$(ls -A /sys/class/udc 2>/dev/null)" ]; then
+    # On factory firmware, dr_mode="otg" and DWC2 creates /sys/class/udc, but physical
+    # default is Host mode. Hardware is ONLY peripheral if dr_mode is explicitly "peripheral".
+    if [ -f /proc/device-tree/usb@ff300000/dr_mode ] && grep -aq "peripheral" /proc/device-tree/usb@ff300000/dr_mode 2>/dev/null; then
         RUN_MODE="peripheral"
-    elif [ -f /proc/device-tree/usb@ff300000/dr_mode ] && grep -q "peripheral" /proc/device-tree/usb@ff300000/dr_mode 2>/dev/null; then
+    elif [ -f /sys/firmware/devicetree/base/usb@ff300000/dr_mode ] && grep -aq "peripheral" /sys/firmware/devicetree/base/usb@ff300000/dr_mode 2>/dev/null; then
+        RUN_MODE="peripheral"
+    elif [ ! -f /proc/device-tree/usb@ff300000/dr_mode ] && [ -f /boot/rk3326-g350-peripheral.dtb ] && cmp -s /boot/rk3326-g350-linux.dtb /boot/rk3326-g350-peripheral.dtb; then
+        # Fallback if procfs devicetree is unavailable: check if active boot DTB is peripheral
         RUN_MODE="peripheral"
     else
         RUN_MODE="host"
@@ -191,7 +196,8 @@ detect_status() {
     elif [ -f /boot/rk3326-g350-host.dtb ] && cmp -s /boot/rk3326-g350-linux.dtb /boot/rk3326-g350-host.dtb; then
         BOOT_MODE="host"
     else
-        BOOT_MODE="$RUN_MODE"
+        # Factory stock DTB (dr_mode="otg") or unconfigured defaults to Host mode
+        BOOT_MODE="host"
     fi
 
     # Format Status Mode (strictly <= 42 chars per line)
@@ -219,7 +225,7 @@ detect_status() {
 
     # Check Default Gateway & Active Subnet IP (strictly matched)
     RAW_GW=$(ip route 2>/dev/null | awk '/default/ {print $3}' | head -n 1)
-    ALL_IPS=$(ip -4 addr show dev usb0 2>/dev/null | grep -oP '(?<=inet\s)\d+(\.\d+){3}')
+    ALL_IPS=$(ip -4 addr show dev usb0 2>/dev/null | grep -oP '(?<=inet\s)\d+(\.\d+){3}' | grep -v '^169\.254\.')
 
     if [ "$RAW_GW" == "192.168.137.1" ] && echo "$ALL_IPS" | grep -q "^192.168.137.2$"; then
         ACTIVE_IP="192.168.137.2"
@@ -338,6 +344,20 @@ stop_usb_network() {
 # Action [A]: Start Wired Services (Instant, No Reboot)
 # ------------------------------------------------------------------------------
 start_services() {
+    if [ "${IS_PERIPHERAL:-0}" -ne 1 ]; then
+        printf "\033c" 2>/dev/null
+        clear 2>/dev/null
+        echo -e "${C_CYAN}============================================${C_RESET}"
+        echo -e "${C_RED}   CANNOT START SERVICES IN USB HOST MODE   ${C_RESET}"
+        echo -e "${C_CYAN}============================================${C_RESET}"
+        echo -e " ${C_YELLOW}Press [X] to switch to WIRED PC Mode first.${C_RESET}"
+        echo -e " (A quick reboot is required to activate.)  "
+        echo -e "${C_CYAN}============================================${C_RESET}"
+        echo -e " Returning to menu in 3 seconds...          "
+        sleep 3
+        return
+    fi
+
     printf "\033c" 2>/dev/null
     clear 2>/dev/null
 

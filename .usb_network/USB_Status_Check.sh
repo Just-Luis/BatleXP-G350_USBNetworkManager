@@ -47,7 +47,11 @@ ssh_listening() {
 printf "\033c" 2>/dev/null
 clear 2>/dev/null
 
-if [ -d /sys/class/udc ] && [ -n "$(ls -A /sys/class/udc 2>/dev/null)" ]; then
+if [ -f /proc/device-tree/usb@ff300000/dr_mode ] && grep -aq "peripheral" /proc/device-tree/usb@ff300000/dr_mode 2>/dev/null; then
+    RUN_MODE="peripheral"
+elif [ -f /sys/firmware/devicetree/base/usb@ff300000/dr_mode ] && grep -aq "peripheral" /sys/firmware/devicetree/base/usb@ff300000/dr_mode 2>/dev/null; then
+    RUN_MODE="peripheral"
+elif [ ! -f /proc/device-tree/usb@ff300000/dr_mode ] && [ -f /boot/rk3326-g350-peripheral.dtb ] && cmp -s /boot/rk3326-g350-linux.dtb /boot/rk3326-g350-peripheral.dtb; then
     RUN_MODE="peripheral"
 else
     RUN_MODE="host"
@@ -58,7 +62,7 @@ if [ -f /boot/rk3326-g350-peripheral.dtb ] && cmp -s /boot/rk3326-g350-linux.dtb
 elif [ -f /boot/rk3326-g350-host.dtb ] && cmp -s /boot/rk3326-g350-linux.dtb /boot/rk3326-g350-host.dtb; then
     BOOT_MODE="host"
 else
-    BOOT_MODE="$RUN_MODE"
+    BOOT_MODE="host"
 fi
 
 if [ "$RUN_MODE" == "peripheral" ] && [ "$BOOT_MODE" == "peripheral" ]; then
