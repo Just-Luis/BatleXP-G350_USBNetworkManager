@@ -6,13 +6,14 @@
 
 ## 📑 Table of Contents
 1. [Core Architecture & Requirements](#1-core-architecture--requirements)
-2. [Why USB Network Manager is Mandatory](#2-why-usb-network-manager-is-mandatory)
-3. [Physical Cable & Port Setup](#3-physical-cable--port-setup)
-4. [Phase 1: Hardware Mode Setup (USB Network Manager)](#phase-1-hardware-mode-setup-usb-network-manager)
-5. [Phase 2: Netplay Preparation (`C2C_Netplay_Prep.sh`)](#phase-2-netplay-preparation-c2c_netplay_prepsh)
-6. [Phase 3: Launching the 2-Player Game in RetroArch](#phase-3-launching-the-2-player-game-in-retroarch)
-7. [Phase 4: In-Game Verification & Netplay Controls](#phase-4-in-game-verification--netplay-controls)
-8. [Troubleshooting Matrix](#troubleshooting-matrix)
+2. [Installing the Scripts on Both Consoles (Where to Put Them)](#2-installing-the-scripts-on-both-consoles-where-to-put-them)
+3. [Why USB Network Manager is Mandatory](#3-why-usb-network-manager-is-mandatory)
+4. [Physical Cable & Port Setup](#4-physical-cable--port-setup)
+5. [Phase 1: Hardware Mode Setup (USB Network Manager)](#5-phase-1-hardware-mode-setup-usb-network-manager)
+6. [Phase 2: Netplay Preparation (`C2C_Netplay_Prep.sh`)](#6-phase-2-netplay-preparation-c2c_netplay_prepsh)
+7. [Phase 3: Launching the 2-Player Game in RetroArch](#7-phase-3-launching-the-2-player-game-in-retroarch)
+8. [Phase 4: In-Game Verification & Netplay Controls](#8-phase-4-in-game-verification--netplay-controls)
+9. [Troubleshooting Matrix](#9-troubleshooting-matrix)
 
 ---
 
@@ -41,7 +42,53 @@ Two handhelds connected directly together over USB communicate using an isolated
 
 ---
 
-## 2. Why USB Network Manager is Mandatory
+## 2. Installing the Scripts on Both Consoles (Where to Put Them)
+
+To use wired C2C Netplay, you need two scripts copied onto the MicroSD cards of **both consoles**:
+* **[`USB_Network_Manager.sh`](../USB_Network_Manager.sh):** The hardware manager used to configure Host and Peripheral modes.
+* **[`C2C_Netplay_Prep.sh`](C2C_Netplay_Prep.sh):** The one-click Netplay initializer and port monitor.
+
+---
+
+### 📁 Where to Put the Files on Your SD Card
+
+When you insert your console's MicroSD card (the ROMs / `EASYROMS` partition) into your computer, copy the scripts into the following location:
+
+```text
+EASYROMS/ (or roms/)
+├── tools/                         <-- ⭐ STRONGLY RECOMMENDED LOCATION
+│   ├── USB_Network_Manager.sh     (Appears under the "TOOLS" menu in EmulationStation)
+│   └── C2C_Netplay_Prep.sh        (Appears under the "TOOLS" menu in EmulationStation)
+└── ports/                         <-- Alternative location if your theme lacks a Tools menu
+    ├── USB_Network_Manager.sh
+    └── C2C_Netplay_Prep.sh
+```
+
+> [!TIP]
+> **Recommended Folder:** Paste both `.sh` files into the **`tools/`** folder.  
+> When placed in `tools/`, they appear directly under the **TOOLS** system in EmulationStation (alongside *PortMaster* and *ThemeMaster*).  
+> If your ArkOS theme does not show a Tools menu, paste them into the **`ports/`** folder instead (they will appear in the **PORTS** section).
+
+---
+
+### 💾 Step-by-Step Installation
+
+#### Method A: Direct SD Card Copy (Easiest & Recommended)
+1. Safely shut down **Console 1** (`Start` ➔ `Quit` ➔ `Shutdown System`).
+2. Remove the MicroSD card (Slot 2 / TF2 if you use a dual-card setup, or Slot 1 if single card) and connect it to your PC.
+3. Open the **`EASYROMS`** (or `roms`) partition in Windows File Explorer or Mac Finder.
+4. Copy `USB_Network_Manager.sh` and `C2C_Netplay_Prep.sh` into the **`tools/`** folder.
+5. Safely eject the card, insert it back into Console 1, and turn it on.
+6. **Repeat steps 1 through 5 for Console 2.**
+
+#### Method B: Over the Network via SFTP / Samba (If already tethered to PC)
+If Console 2 is already connected to your PC in Wired PC mode:
+* **Windows File Explorer (Samba):** Open `\\192.168.137.2\roms\tools\` and paste `C2C_Netplay_Prep.sh`.
+* **SFTP (WinSCP / FileZilla):** Connect to `192.168.137.2` (port `22`, username `ark`, password `ark`) and transfer `C2C_Netplay_Prep.sh` into `/roms/tools/`.
+
+---
+
+## 3. Why USB Network Manager is Mandatory
 
 The Rockchip RK3326 SoC inside the Battle XP G350 features **a single USB 2.0 OTG controller**. 
 
@@ -59,7 +106,7 @@ By default from the factory:
 
 ---
 
-## 3. Physical Cable & Port Setup
+## 4. Physical Cable & Port Setup
 
 USB-C port configurations vary across RK3326 handheld devices:
 * **Battle XP G350:** Has a single USB-C port that handles **both OTG and DC** (power and data on the same port). Simply plug the cable directly into this port.
@@ -81,7 +128,7 @@ USB-C port configurations vary across RK3326 handheld devices:
 
 ---
 
-## 4. Phase 1: Hardware Mode Setup (USB Network Manager)
+## 5. Phase 1: Hardware Mode Setup (USB Network Manager)
 
 You only need to do this step once (or whenever switching roles).
 
@@ -106,7 +153,7 @@ You only need to do this step once (or whenever switching roles).
 
 ---
 
-## 5. Phase 2: Netplay Preparation (`C2C_Netplay_Prep.sh`)
+## 6. Phase 2: Netplay Preparation (`C2C_Netplay_Prep.sh`)
 
 Once the hardware modes are set, connect the USB cable between both consoles' `OTG` ports.
 
@@ -154,7 +201,7 @@ Once you see `ONLINE [OK]`, **HOLD `[START + SELECT]`** together on both console
 
 ---
 
-## 6. Phase 3: Launching the 2-Player Game in RetroArch
+## 7. Phase 3: Launching the 2-Player Game in RetroArch
 
 Follow this exact sequence to ensure the host port is open before the client connects:
 
@@ -183,7 +230,7 @@ Follow this exact sequence to ensure the host port is open before the client con
 
 ---
 
-## 7. Phase 4: In-Game Verification & Netplay Controls
+## 8. Phase 4: In-Game Verification & Netplay Controls
 
 * **Latency Check:** Because this connection runs over physical USB Ethernet, latency is sub-millisecond ($< 0.5\text{ ms}$). There is zero frame delay or Wi-Fi packet drops.
 * **Pausing / Menu:** If either player opens the RetroArch Quick Menu (`[Select] + [X]`), Netplay pauses execution on both screens to keep emulation deterministic.
@@ -194,7 +241,7 @@ Follow this exact sequence to ensure the host port is open before the client con
 
 ---
 
-## 8. Troubleshooting Matrix
+## 9. Troubleshooting Matrix
 
 | Problem | Cause | Solution |
 | :--- | :--- | :--- |
