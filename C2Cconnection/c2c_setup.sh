@@ -39,12 +39,18 @@ done
 if [ -n "$FORCE_ROLE" ]; then
     ROLE="$FORCE_ROLE"
 else
-    if [ -f /proc/device-tree/usb@ff300000/dr_mode ] && grep -q "host" /proc/device-tree/usb@ff300000/dr_mode 2>/dev/null; then
+    if [ -f /proc/device-tree/usb@ff300000/dr_mode ] && grep -aq "peripheral" /proc/device-tree/usb@ff300000/dr_mode 2>/dev/null; then
+        ROLE="peripheral"
+    elif [ -f /sys/firmware/devicetree/base/usb@ff300000/dr_mode ] && grep -aq "peripheral" /sys/firmware/devicetree/base/usb@ff300000/dr_mode 2>/dev/null; then
+        ROLE="peripheral"
+    elif [ -f /boot/rk3326-g350-peripheral.dtb ] && cmp -s /boot/rk3326-g350-linux.dtb /boot/rk3326-g350-peripheral.dtb 2>/dev/null; then
+        ROLE="peripheral"
+    elif [ -f /proc/device-tree/usb@ff300000/dr_mode ] && grep -aq "host" /proc/device-tree/usb@ff300000/dr_mode 2>/dev/null; then
         ROLE="host"
-    elif [ -f /boot/rk3326-g350-host.dtb ] && cmp -s /boot/rk3326-g350-linux.dtb /boot/rk3326-g350-host.dtb; then
+    elif [ -f /boot/rk3326-g350-host.dtb ] && cmp -s /boot/rk3326-g350-linux.dtb /boot/rk3326-g350-host.dtb 2>/dev/null; then
         ROLE="host"
     else
-        ROLE="peripheral"
+        ROLE="host"
     fi
 fi
 
@@ -64,14 +70,21 @@ find_interface() {
         IFACE="usb0"
     else
         for dev in /sys/class/net/*; do
+            [ ! -d "$dev" ] && continue
             dname=$(basename "$dev")
-            if [ "$dname" != "lo" ] && [ "$dname" != "wlan0" ] && [ "$dname" != "eth0" ]; then
-                IFACE="$dname"
-                break
-            fi
+            case "$dname" in
+                lo|wlan*|dummy*|sit*|ip6tnl*)
+                    continue
+                    ;;
+                usb*|eth*|en*)
+                    IFACE="$dname"
+                    break
+                    ;;
+            esac
         done
     fi
     [ -z "$IFACE" ] && IFACE="usb0"
+    sudo ip link set "$IFACE" up 2>/dev/null
 }
 
 find_interface
@@ -108,13 +121,20 @@ fi
 # Action: Bring Up Network
 echo "[C2C Setup] Configuring console as: ${ROLE^^} ($MY_IP)..."
 
-# Ensure gadget module loaded if peripheral
+# Ensure appropriate modules are loaded
 if [ "$ROLE" == "peripheral" ]; then
     if ! lsmod | grep -q "g_ether"; then
         sudo modprobe g_ether 2>/dev/null
         sleep 0.5
         find_interface
     fi
+else
+    sudo modprobe cdc_ether 2>/dev/null
+    sudo modprobe rndis_host 2>/dev/null
+    sudo modprobe cdc_eem 2>/dev/null
+    sudo modprobe usbnet 2>/dev/null
+    sleep 0.3
+    find_interface
 fi
 
 # Enable interface

@@ -68,14 +68,19 @@ trap cleanup EXIT INT TERM
 # Helper: Detect Local Console Role (Host vs Peripheral)
 # ------------------------------------------------------------------------------
 detect_role() {
-    if [ -f /proc/device-tree/usb@ff300000/dr_mode ] && grep -q "host" /proc/device-tree/usb@ff300000/dr_mode 2>/dev/null; then
-        RUN_MODE="host"
-    elif [ -f /proc/device-tree/usb@ff300000/dr_mode ] && grep -q "peripheral" /proc/device-tree/usb@ff300000/dr_mode 2>/dev/null; then
+    if [ -f /proc/device-tree/usb@ff300000/dr_mode ] && grep -aq "peripheral" /proc/device-tree/usb@ff300000/dr_mode 2>/dev/null; then
         RUN_MODE="peripheral"
-    elif [ -f /boot/rk3326-g350-host.dtb ] && cmp -s /boot/rk3326-g350-linux.dtb /boot/rk3326-g350-host.dtb; then
+    elif [ -f /sys/firmware/devicetree/base/usb@ff300000/dr_mode ] && grep -aq "peripheral" /sys/firmware/devicetree/base/usb@ff300000/dr_mode 2>/dev/null; then
+        RUN_MODE="peripheral"
+    elif [ -f /boot/rk3326-g350-peripheral.dtb ] && cmp -s /boot/rk3326-g350-linux.dtb /boot/rk3326-g350-peripheral.dtb 2>/dev/null; then
+        RUN_MODE="peripheral"
+    elif [ -f /proc/device-tree/usb@ff300000/dr_mode ] && grep -aq "host" /proc/device-tree/usb@ff300000/dr_mode 2>/dev/null; then
+        RUN_MODE="host"
+    elif [ -f /boot/rk3326-g350-host.dtb ] && cmp -s /boot/rk3326-g350-linux.dtb /boot/rk3326-g350-host.dtb 2>/dev/null; then
         RUN_MODE="host"
     else
-        RUN_MODE="peripheral"
+        # Factory stock DTB (dr_mode="otg") defaults to Host mode physically
+        RUN_MODE="host"
     fi
 
     if [ "$RUN_MODE" == "host" ]; then
@@ -100,18 +105,27 @@ detect_role() {
 # ------------------------------------------------------------------------------
 find_interface() {
     IFACE=""
+    # 1. Prefer usb0 if it exists
     if [ -d "/sys/class/net/usb0" ]; then
         IFACE="usb0"
     else
+        # 2. On Host, a USB Ethernet gadget can be named eth0, eth1, or usb*
         for dev in /sys/class/net/*; do
+            [ ! -d "$dev" ] && continue
             dname=$(basename "$dev")
-            if [ "$dname" != "lo" ] && [ "$dname" != "wlan0" ] && [ "$dname" != "eth0" ]; then
-                IFACE="$dname"
-                break
-            fi
+            case "$dname" in
+                lo|wlan*|dummy*|sit*|ip6tnl*)
+                    continue
+                    ;;
+                usb*|eth*|en*)
+                    IFACE="$dname"
+                    break
+                    ;;
+            esac
         done
     fi
     [ -z "$IFACE" ] && IFACE="usb0"
+    sudo ip link set "$IFACE" up 2>/dev/null
 }
 
 # ------------------------------------------------------------------------------
@@ -123,9 +137,17 @@ setup_network() {
     if [ "$LOCAL_ROLE" == "PERIPHERAL" ]; then
         if ! lsmod | grep -q "g_ether"; then
             sudo modprobe g_ether 2>/dev/null
-            sleep 0.2
+            sleep 0.3
             find_interface
         fi
+    else
+        # Load host-side drivers for USB Ethernet gadgets
+        sudo modprobe cdc_ether 2>/dev/null
+        sudo modprobe rndis_host 2>/dev/null
+        sudo modprobe cdc_eem 2>/dev/null
+        sudo modprobe usbnet 2>/dev/null
+        sleep 0.3
+        find_interface
     fi
 
     sudo ip link set "$IFACE" up 2>/dev/null
