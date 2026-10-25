@@ -1,7 +1,7 @@
 #!/bin/bash
 # ==============================================================================
 # Script: c2c_setup.sh
-# Directory: C2Cconnection/
+# Directory: .usb_network/
 # Device: Battle XP G350 & RK3326 Handhelds (ArkOS / dArkOS)
 # Purpose: Headless C2C Network Interface & Static IP Setup Helper
 # Usage: sudo ./c2c_setup.sh [--host | --peripheral | --status | --down]
