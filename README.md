@@ -138,9 +138,9 @@ Open Network Connections on your Windows PC (`Win + R`, type `ncpa.cpl`, and hit
 
 Connect two Battle XP G350 (or RK3326 ArkOS) handhelds directly together via a USB cable for **zero-latency, sub-millisecond offline multiplayer** with no Wi-Fi, router, or hotspot!
 
-> 🔗 **Dedicated Project:**  
-> Wired 2-Player Netplay is available as a completely independent, single-script project:  
-> 👉 **[`C2Cconnection NetPlay/`](C2Cconnection%20NetPlay/)** *(or the standalone **[RK3326-USB-Netplay](C2Cconnection%20NetPlay/README.md)** repository)*.  
+> 🔗 **Companion Project:**  
+> Wired 2-Player Netplay is available as a completely independent standalone suite:  
+> 👉 **[RK3326-USB-Netplay on GitHub](https://github.com/Just-Luis/RK3326-USB-Netplay)**  
 > Includes the all-in-one `C2C_Netplay_Prep.sh` with automatic First-Launch Role Wizard and RetroArch offline auto-patching!
 
 ---
@@ -153,8 +153,8 @@ Connect two Battle XP G350 (or RK3326 ArkOS) handhelds directly together via a U
 | **[`COMMUNITY_TUTORIAL.md`](COMMUNITY_TUTORIAL.md)** | **Complete Community Guide.** In-depth PC tethering tutorial with detailed walkthroughs and FAQs. |
 | **[`Test_Internet_On_G350.bat`](Test_Internet_On_G350.bat)** | 1-Click Windows batch tool to test physical link, remote ping (8.8.8.8), and DNS resolution. |
 | **[`Test_Connection_G350.bat`](Test_Connection_G350.bat)** | 1-Click Windows batch script to test local USB connection and SSH port 22 response. |
-| **[`C2Cconnection NetPlay/`](C2Cconnection%20NetPlay/)** | **2-Player Netplay Suite.** Standalone project containing `C2C_Netplay_Prep.sh`, `Revert_Netplay.sh`, and `README.md`. |
-| **[`.usb_network/`](.usb_network/)** | Modular sub-scripts, headless CLI helpers (`c2c_setup.sh`), clean install testing tool (`Revert_Netplay.sh`), and gamepad visualizer. |
+| **[`.usb_network/`](.usb_network/)** | Modular sub-scripts, headless CLI helpers, and gamepad visualizer. |
+| **[RK3326-USB-Netplay](https://github.com/Just-Luis/RK3326-USB-Netplay)** | **Companion Project:** Dedicated 2-Player Wired USB Netplay suite with `C2C_Netplay_Prep.sh`. |
 
 ---
 
