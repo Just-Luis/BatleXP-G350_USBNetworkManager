@@ -148,31 +148,59 @@ check_exit_combo() {
 # ------------------------------------------------------------------------------
 # 1. Role Detection
 # ------------------------------------------------------------------------------
-if [ -f /proc/device-tree/usb@ff300000/dr_mode ] && grep -q "host" /proc/device-tree/usb@ff300000/dr_mode 2>/dev/null; then
-    ROLE="host"
-    MY_IP="192.168.10.1"
-    PEER_IP="192.168.10.2"
-    LOCAL_ROLE_STR="${C_YELLOW}[HOST]${C_RESET} ${C_WHITE}(192.168.10.1)${C_RESET}"
-    PEER_ROLE_STR="${C_GREEN}[PERIPHERAL]${C_RESET} ${C_GRAY}(192.168.10.2)${C_RESET}"
-else
-    ROLE="peripheral"
-    MY_IP="192.168.10.2"
-    PEER_IP="192.168.10.1"
-    LOCAL_ROLE_STR="${C_GREEN}[PERIPHERAL]${C_RESET} ${C_WHITE}(192.168.10.2)${C_RESET}"
-    PEER_ROLE_STR="${C_YELLOW}[HOST]${C_RESET} ${C_GRAY}(192.168.10.1)${C_RESET}"
-fi
+detect_role() {
+    if [ -f /proc/device-tree/usb@ff300000/dr_mode ] && grep -aq "peripheral" /proc/device-tree/usb@ff300000/dr_mode 2>/dev/null; then
+        ROLE="peripheral"
+    elif [ -f /sys/firmware/devicetree/base/usb@ff300000/dr_mode ] && grep -aq "peripheral" /sys/firmware/devicetree/base/usb@ff300000/dr_mode 2>/dev/null; then
+        ROLE="peripheral"
+    elif [ -f /boot/rk3326-g350-peripheral.dtb ] && cmp -s /boot/rk3326-g350-linux.dtb /boot/rk3326-g350-peripheral.dtb 2>/dev/null; then
+        ROLE="peripheral"
+    elif [ -f /proc/device-tree/usb@ff300000/dr_mode ] && grep -aq "host" /proc/device-tree/usb@ff300000/dr_mode 2>/dev/null; then
+        ROLE="host"
+    elif [ -f /boot/rk3326-g350-host.dtb ] && cmp -s /boot/rk3326-g350-linux.dtb /boot/rk3326-g350-host.dtb 2>/dev/null; then
+        ROLE="host"
+    else
+        # Factory stock DTB (dr_mode="otg") defaults to Host mode physically
+        ROLE="host"
+    fi
+
+    if [ "$ROLE" == "host" ]; then
+        MY_IP="192.168.10.1"
+        PEER_IP="192.168.10.2"
+        LOCAL_ROLE_STR="${C_YELLOW}[HOST]${C_RESET} ${C_WHITE}(192.168.10.1)${C_RESET}"
+        PEER_ROLE_STR="${C_GREEN}[PERIPHERAL]${C_RESET} ${C_GRAY}(192.168.10.2)${C_RESET}"
+    else
+        MY_IP="192.168.10.2"
+        PEER_IP="192.168.10.1"
+        LOCAL_ROLE_STR="${C_GREEN}[PERIPHERAL]${C_RESET} ${C_WHITE}(192.168.10.2)${C_RESET}"
+        PEER_ROLE_STR="${C_YELLOW}[HOST]${C_RESET} ${C_GRAY}(192.168.10.1)${C_RESET}"
+    fi
+}
+detect_role
 
 find_interface() {
-    IFACE="usb0"
-    if [ ! -d "/sys/class/net/usb0" ]; then
+    IFACE=""
+    # 1. Prefer usb0 if it exists
+    if [ -d "/sys/class/net/usb0" ]; then
+        IFACE="usb0"
+    else
+        # 2. On Host, a USB Ethernet gadget can be named eth0, eth1, or usb*
         for dev in /sys/class/net/*; do
+            [ ! -d "$dev" ] && continue
             dname=$(basename "$dev")
-            if [ "$dname" != "lo" ] && [ "$dname" != "wlan0" ] && [ "$dname" != "eth0" ]; then
-                IFACE="$dname"
-                break
-            fi
+            case "$dname" in
+                lo|wlan*|dummy*|sit*|ip6tnl*)
+                    continue
+                    ;;
+                usb*|eth*|en*)
+                    IFACE="$dname"
+                    break
+                    ;;
+            esac
         done
     fi
+    [ -z "$IFACE" ] && IFACE="usb0"
+    sudo ip link set "$IFACE" up 2>/dev/null
 }
 
 # ------------------------------------------------------------------------------
@@ -200,24 +228,32 @@ ensure_ip() {
 }
 
 init_network() {
+    detect_role
     if [ "$ROLE" == "peripheral" ]; then
         if ! lsmod | grep -q "g_ether"; then
             sudo modprobe g_ether 2>/dev/null
             sleep 0.3
         fi
+    else
+        # Load host-side drivers for USB Ethernet gadgets
+        sudo modprobe cdc_ether 2>/dev/null
+        sudo modprobe rndis_host 2>/dev/null
+        sudo modprobe cdc_eem 2>/dev/null
+        sudo modprobe usbnet 2>/dev/null
+        sleep 0.3
     fi
 
     find_interface
-    sudo ip link set "$IFACE" up 2>/dev/null
 
     # Wait up to 3s for physical link carrier
     for _i in 1 2 3 4 5 6; do
         [ "$(cat "/sys/class/net/$IFACE/carrier" 2>/dev/null)" = "1" ] && break
         sleep 0.5
+        find_interface
     done
 
     claim_interface
-    sleep 0.3
+    sleep 0.2
     ensure_ip
 }
 
