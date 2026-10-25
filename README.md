@@ -59,6 +59,7 @@ Traditionally, this forced owners to:
 * 🔒 **Instant-Login OpenSSH Server:** Custom PAM and entropy patches eliminate the 15-second SSH hangs common on RK3326 devices.
 * 🎮 **Native Gamepad Interface:** Clean on-screen menu navigable entirely with your console's physical buttons (A, Y, X, B).
 * 🔄 **Hardware Mode Switcher:** Toggle between **Wired PC (Peripheral)** and **USB Host (OTG)** mode on the fly to support USB flash drives and external gamepads.
+* 🕹️ **Direct Console-to-Console (C2C) Netplay:** Connect two handhelds directly over a USB cable for zero-latency ($< 0.5\text{ ms}$) offline 2-player multiplayer without Wi-Fi or routers.
 * 🔋 **Battery-Friendly:** Network services only run on-demand when you explicitly press `[A]`. Offline gaming consumes zero background power.
 
 ---
@@ -133,15 +134,41 @@ Open Network Connections on your Windows PC (`Win + R`, type `ncpa.cpl`, and hit
 
 ---
 
+## 🎮 Direct Console-to-Console (C2C) Netplay & Multiplayer
+
+Connect two Battle XP G350 (or RK3326 ArkOS) handhelds directly together via a USB cable for **zero-latency, sub-millisecond offline multiplayer** and live controller input mirroring.
+
+> 📖 **Complete Walkthroughs:**
+> * **[C2Cconnection/NETPLAY_GUIDE.md](C2Cconnection/NETPLAY_GUIDE.md):** Comprehensive step-by-step 2-player RetroArch Netplay setup, port monitoring, and hardware rules.
+> * **[C2Cconnection/C2C_QUICK_START.md](C2Cconnection/C2C_QUICK_START.md):** Quick start reference and live gamepad input testing.
+
+### ⚡ How C2C Works:
+1. **Hardware Role Requirement:**
+   * **Console 1 (Player 1 / Host):** Set to **USB HOST Mode** via `USB_Network_Manager.sh`.
+   * **Console 2 (Player 2 / Client):** Set to **WIRED PC Mode (Peripheral)** via `USB_Network_Manager.sh`.
+2. **Safe Cabling:**
+   * **⭐ Best & Safest:** Use a **USB-C Male to USB-A Female OTG adapter** on **Console 1 (Host)** connected via a standard **USB-A to USB-C cable** to **Console 2**.
+   * ⚠️ *Avoid direct USB-C to USB-C cables, as budget handhelds lack CC pull-down resistors and can risk reverse 5V battery damage.*
+3. **1-Click Netplay Preparation:**
+   * Run **`C2C_Netplay_Prep.sh`** on both consoles. It automatically assigns static IPs (`192.168.10.1` and `192.168.10.2`), kills conflicting link-local daemons, and patches `retroarch.cfg` to disable Relay Servers and NAT Traversal offline.
+4. **Instant 2-Player Gaming:**
+   * Player 1 launches game ➔ `[Select] + [X]` ➔ **Netplay** ➔ **Host** ➔ **Start Netplay Host**.
+   * Player 2 launches game ➔ `[Select] + [X]` ➔ **Netplay** ➔ **Connect to Netplay Host**.
+
+---
+
 ## 📁 Repository Contents
 
-| File | Purpose |
+| File / Directory | Purpose |
 | :--- | :--- |
-| **[`USB_Network_Manager.sh`](USB_Network_Manager.sh)** | **The main console tool.** Single self-contained script to paste into `tools/` or `ports/`. |
-| **[`COMMUNITY_TUTORIAL.md`](COMMUNITY_TUTORIAL.md)** | **Complete Community Guide.** In-depth tutorial with detailed walkthroughs, diagrams, and FAQs. |
+| **[`USB_Network_Manager.sh`](USB_Network_Manager.sh)** | **The main console tool.** Single self-contained script for PC tethering and hardware mode switching. |
+| **[`C2Cconnection/`](C2Cconnection/)** | **Console-to-Console (C2C) Suite.** Direct USB connection tools, 2-player Netplay prep, and live input visualizer. |
+| **[`C2Cconnection/NETPLAY_GUIDE.md`](C2Cconnection/NETPLAY_GUIDE.md)** | Complete step-by-step guide for offline 2-player RetroArch Netplay over USB. |
+| **[`C2Cconnection/C2C_QUICK_START.md`](C2Cconnection/C2C_QUICK_START.md)** | Quick start guide for C2C connection testing and gamepad input streaming. |
+| **[`COMMUNITY_TUTORIAL.md`](COMMUNITY_TUTORIAL.md)** | **Complete Community Guide.** In-depth PC tethering tutorial with detailed walkthroughs and FAQs. |
 | **[`Test_Internet_On_G350.bat`](Test_Internet_On_G350.bat)** | 1-Click Windows batch tool to test physical link, remote ping (8.8.8.8), and DNS resolution. |
 | **[`Test_Connection_G350.bat`](Test_Connection_G350.bat)** | 1-Click Windows batch script to test local USB connection and SSH port 22 response. |
-| **[`.usb_network/`](.usb_network/)** | *(Optional)* Standalone modular sub-scripts for advanced users running headless commands over SSH. |
+| **[`.usb_network/`](.usb_network/)** | *(Optional)* Modular sub-scripts for headless execution over SSH. |
 
 ---
 
