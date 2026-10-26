@@ -90,4 +90,6 @@ echo -e "${C_GREEN} SUCCESS: Netplay settings reverted!     ${C_RESET}"
 echo -e "${C_WHITE} Rebooting in 3 seconds...                ${C_RESET}"
 echo -e "${C_CYAN}==========================================${C_RESET}"
 sleep 3
+sync
 sudo reboot
+exit 0
