@@ -248,20 +248,23 @@ echo -e " Press ${C_RED}[B]${C_RESET} to cancel, or wait 5s..."
 
 for i in 5 4 3 2 1; do
     echo -ne " Rebooting in $i seconds... (Press B)\r"
-    if type Test_Button_B >/dev/null 2>&1; then
-        Test_Button_B
-        if [ "$?" -eq "10" ]; then
+    for _slice in {1..10}; do
+        if type Test_Button_B >/dev/null 2>&1; then
+            Test_Button_B
+            if [ "$?" -eq "10" ]; then
+                echo -e "\n${C_YELLOW}Reboot canceled. Restart manually.${C_RESET}"
+                sleep 2
+                exit 0
+            fi
+        fi
+        read -t 0.1 -n 1 key 2>/dev/null
+        if [[ "$key" == "b" || "$key" == "B" || "$key" == "q" || "$key" == "3" ]]; then
             echo -e "\n${C_YELLOW}Reboot canceled. Restart manually.${C_RESET}"
             sleep 2
             exit 0
         fi
-    fi
-    read -t 1 -n 1 key 2>/dev/null
-    if [[ "$key" == "b" || "$key" == "B" || "$key" == "q" ]]; then
-        echo -e "\n${C_YELLOW}Reboot canceled. Restart manually.${C_RESET}"
-        sleep 2
-        exit 0
-    fi
+        sleep 0.1
+    done
 done
 
 echo -e "\n${C_GREEN}Rebooting now...${C_RESET}"
