@@ -1,12 +1,12 @@
-# 🎮 Battle XP G350 USB Network Manager v2.1.0 — Release Notes
+# 🎮 Battle XP G350 USB Network Manager v1.3 — Release Notes
 
 > **Direct USB wired tethering, PortMaster downloads, high-speed SFTP transfers, and Samba file sharing for the Battle XP G350 and Rockchip RK3326 handhelds running ArkOS / dArkOS.**
 
-We are pleased to announce **v2.1.0** of the **Battle XP G350 USB Network Manager**! This release brings major quality-of-life enhancements to the handheld dashboard, eliminating offline menu lag, introducing real-time live auto-refreshing, bulletproofing DNS configuration for PortMaster, and formally decoupling the Console-to-Console (C2C) Netplay suite into its own dedicated companion repository.
+We are pleased to announce **v1.3** of the **Battle XP G350 USB Network Manager**! This minor update brings quality-of-life enhancements and polish to the handheld dashboard, eliminating offline menu lag, introducing real-time live auto-refreshing, bulletproofing DNS configuration for PortMaster, and formally decoupling the Console-to-Console (C2C) Netplay suite into its own dedicated companion repository.
 
 ---
 
-## 🌟 What's New in v2.1.0
+## 🌟 What's New in v1.3
 
 ### 🔄 Real-Time Live Auto-Refresh (Flicker-Free)
 * **Live Link & Gateway Monitoring:** The dashboard now automatically refreshes every ~4 seconds while sitting idle in the menu.
