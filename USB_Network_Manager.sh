@@ -35,95 +35,13 @@ C_WHITE="\033[1;37m"
 C_GRAY="\033[0;37m"
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
-STATE_DIR="/tmp/usb_net_mgr"
-WATCH_PID_FILE="$STATE_DIR/btn_watch.pid"
-
-mkdir -p "$STATE_DIR" 2>/dev/null
 
 cleanup() {
-    if [ -f "$WATCH_PID_FILE" ]; then
-        sudo kill -9 "$(cat "$WATCH_PID_FILE" 2>/dev/null)" 2>/dev/null
-        rm -f "$WATCH_PID_FILE" 2>/dev/null
-    fi
     sudo pkill -f "usb_mgr_btn_watch.py" 2>/dev/null
-    rm -rf "$STATE_DIR" 2>/dev/null
+    rm -rf /tmp/usb_net_mgr 2>/dev/null
     printf "\033[?25h" 2>/dev/null
 }
 trap cleanup EXIT INT TERM
-
-start_button_watcher() {
-    [ -f "$WATCH_PID_FILE" ] && kill -0 "$(cat "$WATCH_PID_FILE" 2>/dev/null)" 2>/dev/null && return 0
-    mkdir -p "$STATE_DIR" 2>/dev/null
-
-    cat << 'EOF' > "$STATE_DIR/usb_mgr_btn_watch.py"
-import os, struct, time, glob
-
-D = "/tmp/usb_net_mgr"
-EV_FMT = "llHHi"
-EV_SIZE = struct.calcsize(EV_FMT)
-
-def opened(patterns):
-    out = []
-    for pat in patterns:
-        for p in sorted(glob.glob(pat)):
-            try:
-                f = open(p, "rb", buffering=0)
-                os.set_blocking(f.fileno(), False)
-                out.append((p, f))
-            except Exception:
-                pass
-    return out
-
-js_devs = opened(["/dev/input/js*"])
-ev_devs = opened(["/dev/input/event*"])
-
-# Map RK3326 standard and alternate button codes
-JS_A, JS_B, JS_X, JS_Y = {1}, {0}, {3}, {2}
-EV_A, EV_B, EV_X, EV_Y = {304}, {305}, {307}, {308}
-
-def touch(name):
-    try:
-        open(D + "/" + name, "w").write("1")
-    except Exception:
-        pass
-
-while True:
-    for path, f in js_devs:
-        while True:
-            try:
-                data = f.read(8)
-            except Exception:
-                break
-            if not data or len(data) < 8:
-                break
-            _, val, t, n = struct.unpack("IhBB", data)
-            t &= ~0x80
-            if t == 1 and val != 0:
-                if n in JS_A: touch("btn_a")
-                elif n in JS_B: touch("btn_b")
-                elif n in JS_X: touch("btn_x")
-                elif n in JS_Y: touch("btn_y")
-    for path, f in ev_devs:
-        while True:
-            try:
-                data = f.read(EV_SIZE)
-            except Exception:
-                break
-            if not data or len(data) < EV_SIZE:
-                break
-            _, _, t, code, val = struct.unpack(EV_FMT, data)
-            if t == 1 and val == 1:
-                if code in EV_A: touch("btn_a")
-                elif code in EV_B: touch("btn_b")
-                elif code in EV_X: touch("btn_x")
-                elif code in EV_Y: touch("btn_y")
-    time.sleep(0.02)
-EOF
-    if command -v python3 >/dev/null 2>&1; then
-        sudo python3 "$STATE_DIR/usb_mgr_btn_watch.py" >/dev/null 2>&1 &
-        echo $! > "$WATCH_PID_FILE"
-    fi
-}
 
 # ------------------------------------------------------------------------------
 # Helper: Auto-Generate / Ensure DTB Hardware Profiles on First Run
@@ -620,16 +538,9 @@ switch_hardware_mode() {
         echo -e "${C_CYAN}============================================${C_RESET}"
     fi
 
-    rm -f "$STATE_DIR/btn_b" 2>/dev/null
     for i in 5 4 3 2 1; do
         echo -ne " Rebooting in $i seconds... (Press B to cancel)\r"
         for _slice in {1..10}; do
-            if [ -f "$STATE_DIR/btn_b" ]; then
-                rm -f "$STATE_DIR/btn_b" 2>/dev/null
-                echo -e "\n${C_YELLOW}Reboot canceled. Returning to menu...${C_RESET}"
-                sleep 1.5
-                return 0
-            fi
             if type Test_Button_B >/dev/null 2>&1; then
                 Test_Button_B
                 if [ "$?" -eq "10" ]; then
@@ -657,7 +568,9 @@ switch_hardware_mode() {
 # ------------------------------------------------------------------------------
 # Main Application Loop
 # ------------------------------------------------------------------------------
-start_button_watcher
+# Ensure no lingering watcher processes or stale state files exist
+sudo pkill -f "usb_mgr_btn_watch.py" 2>/dev/null
+rm -rf /tmp/usb_net_mgr 2>/dev/null
 
 REFRESH_MODE=""
 while true; do
@@ -667,43 +580,26 @@ while true; do
 
     # Polling loop for Gamepad and Keyboard input
     while true; do
-        # 1. Instant Gamepad Input via Hardware Watcher Flags
-        if [ -f "$STATE_DIR/btn_a" ]; then
-            rm -f "$STATE_DIR/btn_a" 2>/dev/null
-            start_services
-            break
-        elif [ -f "$STATE_DIR/btn_y" ]; then
-            rm -f "$STATE_DIR/btn_y" 2>/dev/null
-            stop_services
-            break
-        elif [ -f "$STATE_DIR/btn_x" ]; then
-            rm -f "$STATE_DIR/btn_x" 2>/dev/null
-            switch_hardware_mode
-            break
-        elif [ -f "$STATE_DIR/btn_b" ]; then
-            rm -f "$STATE_DIR/btn_b" 2>/dev/null
-            printf "\033c" 2>/dev/null
-            clear 2>/dev/null
-            exit 0
-        fi
-
-        # 2. Gamepad Input via ArkOS buttonmon (fallback)
+        # 1. Gamepad Input via ArkOS buttonmon
         if type Test_Button_A >/dev/null 2>&1; then
             Test_Button_A
             if [ "$?" -eq "10" ]; then
                 start_services
+                while read -t 0.05 -n 1 _; do :; done 2>/dev/null
                 break
             fi
 
             Test_Button_Y
             if [ "$?" -eq "10" ]; then
                 stop_services
+                while read -t 0.05 -n 1 _; do :; done 2>/dev/null
                 break
             fi
 
             Test_Button_X
             if [ "$?" -eq "10" ]; then
                 switch_hardware_mode
+                while read -t 0.05 -n 1 _; do :; done 2>/dev/null
                 break
             fi
 
@@ -715,19 +611,22 @@ while true; do
             fi
         fi
 
-        # 3. Keyboard / SSH / TTY Input
+        # 2. Keyboard / SSH / TTY Input
         read -t 0.05 -n 1 key 2>/dev/null
         case "$key" in
             1|[aA])
                 start_services
+                while read -t 0.05 -n 1 _; do :; done 2>/dev/null
                 break
                 ;;
             2|[yY])
                 stop_services
+                while read -t 0.05 -n 1 _; do :; done 2>/dev/null
                 break
                 ;;
             3|[xX])
                 switch_hardware_mode
+                while read -t 0.05 -n 1 _; do :; done 2>/dev/null
                 break
                 ;;
             4|[bB]|[qQ])
@@ -737,7 +636,7 @@ while true; do
                 ;;
         esac
 
-        # 4. Periodic Auto-Refresh (every ~4 seconds while idle)
+        # 3. Periodic Auto-Refresh (every ~4 seconds while idle)
         if [ $((SECONDS - LAST_REFRESH)) -ge 4 ]; then
             REFRESH_MODE="refresh"
             break
