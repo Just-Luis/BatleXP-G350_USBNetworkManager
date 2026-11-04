@@ -154,7 +154,7 @@ Connect two Battle XP G350 (or RK3326 ArkOS) handhelds directly together via a U
 | **[`Test_Internet_On_G350.bat`](Test_Internet_On_G350.bat)** | 1-Click Windows batch tool to test physical link, remote ping (8.8.8.8), and DNS resolution. |
 | **[`Test_Connection_G350.bat`](Test_Connection_G350.bat)** | 1-Click Windows batch script to test local USB connection and SSH port 22 response. |
 | **[`.usb_network/`](.usb_network/)** | Optional advanced helpers. `Start_Wired_Services.sh`, `Stop_Wired_Services.sh`, `USB_Status_Check.sh`, and `Switch_USB_Mode.sh` are standalone CLI versions of the dashboard actions; `Stream_Screen.py` mirrors the console screen to your PC. |
-| **`.usb_network/` C2C scripts** | `C2C_Connection_Test.sh`, `c2c_setup.sh`, and `Revert_Netplay.sh` are **symbolic links** to the canonical copies in the companion [RK3326-USB-Netplay](https://github.com/Just-Luis/RK3326-USB-Netplay) repository (`.C2C/`), so the code lives in exactly one place. |
+| **`.usb_network/` C2C scripts** | `C2C_Connection_Test.sh`, `c2c_setup.sh`, and `Revert_Netplay.sh` are bundled copies of the canonical versions in the companion [RK3326-USB-Netplay](https://github.com/Just-Luis/RK3326-USB-Netplay) repository (`.C2C/`), so this repository stays usable on its own without cloning the other one. |
 | **[RK3326-USB-Netplay](https://github.com/Just-Luis/RK3326-USB-Netplay)** | **Companion Project:** Dedicated 2-Player Wired USB Netplay suite with `C2C_Netplay_Prep.sh`. |
 
 ---
