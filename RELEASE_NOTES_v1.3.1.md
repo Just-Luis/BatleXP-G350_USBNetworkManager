@@ -40,4 +40,3 @@ We are pleased to release **v1.3.1**, a critical hotfix for the **Battle XP G350
 
 * 🕹️ **2-Player Offline Wired Multiplayer:** [RK3326-USB-Netplay on GitHub](https://github.com/Just-Luis/RK3326-USB-Netplay)
 * 📖 **Complete Step-by-Step Tutorial:** [COMMUNITY_TUTORIAL.md](COMMUNITY_TUTORIAL.md)
-* 🛠️ **Issues & Technical Audit:** [ISSUES_AND_POLISH_CHECKLIST.md](ISSUES_AND_POLISH_CHECKLIST.md)
