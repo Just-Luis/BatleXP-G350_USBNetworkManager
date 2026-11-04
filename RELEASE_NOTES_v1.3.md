@@ -32,7 +32,7 @@ We are pleased to announce **v1.3** of the **Battle XP G350 USB Network Manager*
 ### 🧹 Repository Polish & Windows Scripts Parity
 * **Native Windows Batch Scripts:** Cleaned up `Test_Internet_On_G350.bat` to eliminate dead PowerShell fallback checks, running 100% natively with zero external dependencies.
 * **Standard MIT License:** Added official `LICENSE` file matching the project repository badge and author attribution.
-* **Checklist 100% Complete:** Fully resolved and closed out all items in `ISSUES_AND_POLISH_CHECKLIST.md`.
+* **Technical Audit 100% Complete:** Fully resolved and closed out all known hardware, network, and script-logic issues.
 * **Line Ending Integrity:** Strict Unix `LF` line endings verified across all shell scripts and `CRLF` for Windows `.bat` tools.
 
 ---
@@ -52,4 +52,3 @@ We are pleased to announce **v1.3** of the **Battle XP G350 USB Network Manager*
 
 * 🕹️ **2-Player Offline Wired Multiplayer:** [RK3326-USB-Netplay on GitHub](https://github.com/Just-Luis/RK3326-USB-Netplay)
 * 📖 **Complete Step-by-Step Tutorial:** [COMMUNITY_TUTORIAL.md](COMMUNITY_TUTORIAL.md)
-* 🛠️ **Issues & Technical Audit:** [ISSUES_AND_POLISH_CHECKLIST.md](ISSUES_AND_POLISH_CHECKLIST.md)
