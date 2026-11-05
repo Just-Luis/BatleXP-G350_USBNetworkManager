@@ -10,6 +10,8 @@
 
 ---
 
+> **New in v1.5.0:** the script can now be driven from the PC. `--refresh-net` re-applies the interface addresses and default route without restarting anything, which lets the G350 Companion app move the console between the direct (`192.168.7.x`) and Windows-ICS (`192.168.137.x`) setups automatically. See [docs/CONSOLE_CONTROL_INTERFACE.md](docs/CONSOLE_CONTROL_INTERFACE.md).
+
 ## 📖 Beginner's Guide & Full Tutorial
 
 > [!TIP]
