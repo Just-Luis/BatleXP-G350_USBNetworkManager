@@ -5,8 +5,15 @@
 # Layout: Tailored for 3.5" Handhelds (Max 44 cols x 16 rows, zero overflow)
 # ==============================================================================
 
+# Machine-callable modes (--refresh-net / --set-gateway) must not touch the
+# console TTY or emit TUI escape codes. Detect them before anything else runs.
+G350_CLI_MODE=0
+case "${1:-}" in
+    --refresh-net|--set-gateway) G350_CLI_MODE=1 ;;
+esac
+
 # Direct output to physical display if launched from EmulationStation
-if [ -z "$SSH_CONNECTION" ]; then
+if [ -z "$SSH_CONNECTION" ] && [ "$G350_CLI_MODE" -ne 1 ]; then
     for tty in /dev/tty0 /dev/tty1; do
         if [ -e "$tty" ]; then
             sudo chmod 666 "$tty" 2>/dev/null
@@ -16,8 +23,8 @@ if [ -z "$SSH_CONNECTION" ]; then
     done
 fi
 
-# Set clean console font if available
-if [ -f /usr/share/consolefonts/Lat7-TerminusBold28x14.psf.gz ]; then
+# Set clean console font if available (TUI only)
+if [ "$G350_CLI_MODE" -ne 1 ] && [ -f /usr/share/consolefonts/Lat7-TerminusBold28x14.psf.gz ]; then
     sudo setfont /usr/share/consolefonts/Lat7-TerminusBold28x14.psf.gz 2>/dev/null
 fi
 
@@ -47,11 +54,17 @@ RESOLV_ABSENT="$STATE_DIR/resolv.conf.absent"
 PROBE_FILE="/tmp/usb_net_mgr_probe"
 PROBE_LOCK="/tmp/usb_net_mgr_probe.lock"
 
+# Populated by detect_status() and refresh_usb_network()
+ACTIVE_IP="${ACTIVE_IP:-}"
+ACTIVE_GW="${ACTIVE_GW:-}"
+
 cleanup() {
     sudo pkill -f "usb_mgr_btn_watch.py" 2>/dev/null
     rm -rf /tmp/usb_net_mgr 2>/dev/null
     rm -f "$PROBE_LOCK" 2>/dev/null
-    printf "\033[?25h" 2>/dev/null
+    # Cursor-restore is for the on-device TUI only; a machine caller
+    # (--refresh-net) wants clean, parseable output.
+    [ "${G350_CLI_MODE:-0}" -eq 1 ] || printf "\033[?25h" 2>/dev/null
 }
 trap cleanup EXIT INT TERM
 
@@ -483,6 +496,58 @@ start_ssh_server() {
 }
 
 # ------------------------------------------------------------------------------
+# Helper: Re-apply usb0 addressing and default route WITHOUT tearing anything down
+#
+# Used when the PC end changes address while we are running, most importantly when
+# Windows Internet Connection Sharing is switched on or off, which moves the PC
+# between 192.168.7.1 and 192.168.137.1.
+#
+# Deliberately does NOT touch sshd or the g_ether gadget. stop_services() unloads
+# g_ether and flushes usb0, which would destroy the very SSH session a remote
+# caller is using to ask for the refresh.
+#
+# Safe to run repeatedly: both addresses are (re)added and the default route is
+# replaced, so a second run on an already-correct link is a no-op.
+# ------------------------------------------------------------------------------
+refresh_usb_network() {
+    local ifc="usb0"
+    local dev
+    for dev in /sys/class/net/*; do
+        [ ! -d "$dev" ] && continue
+        case "$(basename "$dev")" in
+            lo|wlan*|dummy*|sit*|ip6tnl*) continue ;;
+            usb*|eth*|en*) ifc=$(basename "$dev"); break ;;
+        esac
+    done
+
+    # Keep the gadget up; only re-apply addressing.
+    sudo ip link set "$ifc" up 2>/dev/null
+    sudo ip addr add 192.168.7.2/24 dev "$ifc" 2>/dev/null
+    sudo ip addr add 192.168.137.2/24 dev "$ifc" 2>/dev/null
+
+    # Pick the gateway that is actually answering. ICS answers on 192.168.137.1;
+    # the direct-PC link answers on 192.168.7.1.
+    if ping -c 1 -W 1 192.168.137.1 >/dev/null 2>&1; then
+        sudo ip route replace default via 192.168.137.1 dev "$ifc" 2>/dev/null
+        ACTIVE_GW="192.168.137.1"
+        ACTIVE_IP="192.168.137.2"
+    elif ping -c 1 -W 1 192.168.7.1 >/dev/null 2>&1; then
+        sudo ip route replace default via 192.168.7.1 dev "$ifc" 2>/dev/null
+        ACTIVE_GW="192.168.7.1"
+        ACTIVE_IP="192.168.7.2"
+    else
+        # Neither answers; report whatever route is actually in force.
+        ACTIVE_GW=$(ip route 2>/dev/null | awk '/default/ {print $3; exit}')
+    fi
+
+    # Drop the cached probe verdict so the next menu draws a real result.
+    rm -f "$PROBE_FILE" "$PROBE_LOCK" 2>/dev/null
+
+    printf 'gateway=%s ip=%s
+' "${ACTIVE_GW:-unknown}" "${ACTIVE_IP:-unknown}"
+}
+
+# ------------------------------------------------------------------------------
 # Helper: Fully tear down the USB network link (IPs, route, interface, gadget)
 # ------------------------------------------------------------------------------
 stop_usb_network() {
@@ -732,6 +797,50 @@ switch_hardware_mode() {
     sudo reboot
     exit 0
 }
+
+#===============================================================================
+# CONTROL INTERFACE (used by the G350 Companion desktop app)
+#===============================================================================
+# Lets the PC ask the console to re-apply its network settings after the PC end
+# changes address (e.g. Windows ICS switching 192.168.7.1 to 192.168.137.1).
+#
+# Strictly non-interactive and non-destructive: no TUI, no waits, no gadget
+# unload. With no arguments the normal menu runs exactly as before, so launching
+# from EmulationStation is unaffected.
+#
+# Usage:
+#   USB_Network_Manager.sh --refresh-net        re-apply IPs + default route
+#   USB_Network_Manager.sh --set-gateway <ip>   force the default route via <ip>
+#===============================================================================
+case "${1:-}" in
+    --refresh-net)
+        refresh_usb_network
+        exit 0
+        ;;
+    --set-gateway)
+        GW="${2:-}"
+        if [ -n "$GW" ] && [[ "$GW" =~ ^[0-9]+[.][0-9]+[.][0-9]+[.][0-9]+$ ]]; then
+            ifc="usb0"
+            for dev in /sys/class/net/*; do
+                [ ! -d "$dev" ] && continue
+                case "$(basename "$dev")" in
+                    lo|wlan*|dummy*|sit*|ip6tnl*) continue ;;
+                    usb*|eth*|en*) ifc=$(basename "$dev"); break ;;
+                esac
+            done
+            sudo ip link set "$ifc" up 2>/dev/null
+            sudo ip addr add 192.168.7.2/24 dev "$ifc" 2>/dev/null
+            sudo ip addr add 192.168.137.2/24 dev "$ifc" 2>/dev/null
+            sudo ip route replace default via "$GW" dev "$ifc" 2>/dev/null
+            rm -f "$PROBE_FILE" "$PROBE_LOCK" 2>/dev/null
+            echo "gateway=$GW ip=$ifc"
+        else
+            echo "invalid gateway" >&2
+            exit 2
+        fi
+        exit 0
+        ;;
+esac
 
 # ------------------------------------------------------------------------------
 # Main Application Loop
