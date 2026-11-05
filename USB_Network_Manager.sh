@@ -36,12 +36,109 @@ C_GRAY="\033[0;37m"
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
 
+# Persistent state for DNS preservation (survives reboot until explicitly restored)
+STATE_DIR="/var/lib/usb_network_manager"
+RESOLV_CONF="/etc/resolv.conf"
+RESOLV_BAK="$STATE_DIR/resolv.conf.bak"
+RESOLV_LINK="$STATE_DIR/resolv.conf.symlink"
+RESOLV_ABSENT="$STATE_DIR/resolv.conf.absent"
+
+# Non-blocking cached probe files (keep the menu responsive)
+PROBE_FILE="/tmp/usb_net_mgr_probe"
+PROBE_LOCK="/tmp/usb_net_mgr_probe.lock"
+
 cleanup() {
     sudo pkill -f "usb_mgr_btn_watch.py" 2>/dev/null
     rm -rf /tmp/usb_net_mgr 2>/dev/null
+    rm -f "$PROBE_LOCK" 2>/dev/null
     printf "\033[?25h" 2>/dev/null
 }
 trap cleanup EXIT INT TERM
+
+# ------------------------------------------------------------------------------
+# Helper: Preserve the user's original DNS configuration exactly once per session
+# Handles all three real-world cases: regular file, symlink, or absent file.
+# ------------------------------------------------------------------------------
+backup_resolv_conf() {
+    # Already backed up -> never overwrite the pristine copy
+    if sudo test -f "$RESOLV_BAK" 2>/dev/null \
+        || sudo test -f "$RESOLV_LINK" 2>/dev/null \
+        || sudo test -f "$RESOLV_ABSENT" 2>/dev/null; then
+        return 0
+    fi
+
+    sudo mkdir -p "$STATE_DIR" 2>/dev/null
+
+    if [ -L "$RESOLV_CONF" ]; then
+        # Preserve the symlink target so we can recreate it on restore
+        readlink "$RESOLV_CONF" 2>/dev/null | sudo tee "$RESOLV_LINK" >/dev/null 2>&1
+    elif [ -f "$RESOLV_CONF" ]; then
+        sudo cp -p "$RESOLV_CONF" "$RESOLV_BAK" 2>/dev/null
+    else
+        # File did not exist at all: remember that so restore removes ours
+        sudo touch "$RESOLV_ABSENT" 2>/dev/null
+    fi
+}
+
+# ------------------------------------------------------------------------------
+# Helper: Put the user's DNS configuration back the way we found it
+# ------------------------------------------------------------------------------
+restore_resolv_conf() {
+    local restored=1
+
+    if sudo test -f "$RESOLV_LINK" 2>/dev/null; then
+        local target
+        target=$(sudo cat "$RESOLV_LINK" 2>/dev/null)
+        sudo rm -f "$RESOLV_CONF" 2>/dev/null
+        [ -n "$target" ] && sudo ln -sfn "$target" "$RESOLV_CONF" 2>/dev/null
+        restored=0
+    elif sudo test -f "$RESOLV_BAK" 2>/dev/null; then
+        sudo cp -p "$RESOLV_BAK" "$RESOLV_CONF" 2>/dev/null
+        restored=0
+    elif sudo test -f "$RESOLV_ABSENT" 2>/dev/null; then
+        sudo rm -f "$RESOLV_CONF" 2>/dev/null
+        restored=0
+    fi
+
+    sudo rm -f "$RESOLV_LINK" "$RESOLV_BAK" "$RESOLV_ABSENT" 2>/dev/null
+    return $restored
+}
+
+# ------------------------------------------------------------------------------
+# Helper: Non-blocking cached reachability probe
+# The ping runs in the background so the UI never stalls waiting on a dead link.
+# ------------------------------------------------------------------------------
+probe_start() {
+    [ -f "$PROBE_LOCK" ] && return 0
+    : > "$PROBE_LOCK" 2>/dev/null
+    (
+        res="FAIL"
+        if ping -c 1 -W 1 "$1" >/dev/null 2>&1; then
+            res="OK"
+        fi
+        printf '%s %s\n' "$res" "$(date +%s)" > "$PROBE_FILE.tmp" 2>/dev/null
+        mv -f "$PROBE_FILE.tmp" "$PROBE_FILE" 2>/dev/null
+        rm -f "$PROBE_LOCK" 2>/dev/null
+    ) &
+}
+
+probe_read() {
+    local res ts now
+    res=""
+    ts=0
+    if [ -f "$PROBE_FILE" ]; then
+        read -r res ts _ < "$PROBE_FILE" 2>/dev/null
+    fi
+    now=$(date +%s)
+    case "$ts" in ''|*[!0-9]*) ts=0 ;; esac
+
+    # Refresh in the background when the cached result is missing or stale
+    if [ -z "$res" ] || [ $((now - ts)) -gt 3 ]; then
+        probe_start "$1"
+    fi
+
+    printf '%s' "$res"
+}
 
 # ------------------------------------------------------------------------------
 # Helper: Auto-Generate / Ensure DTB Hardware Profiles on First Run
@@ -181,7 +278,12 @@ ssh_listening() {
 # Helper: Detect Current USB & Network Status
 # ------------------------------------------------------------------------------
 detect_status() {
-    ensure_dtb_profiles
+    # Only ensure the profiles once per run: the DTB comparison is cheap but this
+    # runs on every ~4s auto-refresh, and a missing-python regeneration attempt
+    # would otherwise be repeated on each redraw.
+    if [ "${DTB_PROFILES_OK:-0}" -ne 1 ]; then
+        ensure_dtb_profiles && DTB_PROFILES_OK=1
+    fi
 
     # 1. Detect Running Kernel Hardware Mode
     # On factory firmware, dr_mode="otg" and DWC2 creates /sys/class/udc, but physical
@@ -232,7 +334,8 @@ detect_status() {
 
     # Check Default Gateway & Active Subnet IP (pure-bash, immune to Broken Pipe)
     RAW_GW=$(ip route 2>/dev/null | awk '/default/ {print $3; exit}')
-    ALL_IPS=$(ip -4 addr show dev usb0 2>/dev/null | grep -oP '(?<=inet\s)\d+(\.\d+){3}' | grep -v '^169\.254\.')
+    ALL_IPS=$(ip -4 addr show dev usb0 2>/dev/null | awk '/inet /{print $2}' | cut -d/ -f1 | grep -v '^169\.254\.')
+    ALL_IPS=$(printf '%s\n' "$ALL_IPS" | tr '\n' ' ')
 
     if [ "$RAW_GW" = "192.168.137.1" ] && [[ "$ALL_IPS" =~ (^|[[:space:]])192\.168\.137\.2($|[[:space:]]) ]]; then
         ACTIVE_IP="192.168.137.2"
@@ -273,8 +376,9 @@ detect_status() {
         STATUS_SAMBA="${C_GRAY}INACTIVE${C_RESET}"
     fi
 
-    # Check Internet Connectivity (only if an active gateway route is present)
-    if [ -n "$RAW_GW" ] && [ -n "$ACTIVE_IP" ] && ping -c 1 -W 1 8.8.8.8 >/dev/null 2>&1; then
+    # Check Internet Connectivity without ever blocking the menu:
+    # the ping is fired in the background and the last cached verdict is shown.
+    if [ -n "$RAW_GW" ] && [ -n "$ACTIVE_IP" ] && [ "$(probe_read 8.8.8.8)" = "OK" ]; then
         STATUS_NET="${C_GREEN}ONLINE (PortMaster Ready)${C_RESET}"
     else
         STATUS_NET="${C_GRAY}OFFLINE${C_RESET}"
@@ -310,6 +414,39 @@ draw_menu() {
 }
 
 # ------------------------------------------------------------------------------
+# Helper: Kill every sshd EXCEPT the process that owns our own SSH session.
+# Killing our own sshd detaches the session with 'Broken pipe' whenever this tool
+# is driven over SSH while tethered.
+# ------------------------------------------------------------------------------
+kill_sshd_except_self() {
+    local keep=""
+    if [ -n "$SSH_CONNECTION" ] && [ -n "$PPID" ]; then
+        # Walk up from our parent shell to the sshd that spawned the session
+        local p="$PPID"
+        local depth=0
+        while [ -n "$p" ] && [ "$p" -gt 1 ] && [ "$depth" -lt 10 ]; do
+            if [ "$(cat "/proc/$p/comm" 2>/dev/null)" = "sshd" ]; then
+                keep="$p"
+                break
+            fi
+            p=$(awk '{print $4}' "/proc/$p/stat" 2>/dev/null)
+            depth=$((depth + 1))
+        done
+    fi
+
+    if [ -z "$keep" ]; then
+        sudo killall -9 sshd 2>/dev/null
+        return 0
+    fi
+
+    local pid
+    for pid in $(pgrep -x sshd 2>/dev/null); do
+        [ "$pid" = "$keep" ] && continue
+        sudo kill -9 "$pid" 2>/dev/null
+    done
+}
+
+# ------------------------------------------------------------------------------
 # Helper: Start SSH deterministically (no races) and verify port 22 is listening
 # ------------------------------------------------------------------------------
 start_ssh_server() {
@@ -321,7 +458,7 @@ start_ssh_server() {
     # Stop every other owner of port 22 first (service, socket activation, strays)
     sudo systemctl stop ssh.socket 2>/dev/null
     sudo systemctl stop ssh 2>/dev/null
-    sudo killall -9 sshd 2>/dev/null
+    kill_sshd_except_self
     sleep 0.5
 
     # Single, sequential start (sshd daemonizes itself, no background race)
@@ -349,10 +486,27 @@ start_ssh_server() {
 # Helper: Fully tear down the USB network link (IPs, route, interface, gadget)
 # ------------------------------------------------------------------------------
 stop_usb_network() {
-    sudo ip route del default dev usb0 2>/dev/null
-    sudo ip addr flush dev usb0 2>/dev/null
-    sudo ip link set usb0 down 2>/dev/null
+    # Operate on the interface that actually carries the wired link instead of
+    # assuming usb0 (the gadget may enumerate under a different name).
+    local ifc="usb0"
+    local dev
+    for dev in /sys/class/net/*; do
+        [ ! -d "$dev" ] && continue
+        case "$(basename "$dev")" in
+            lo|wlan*|dummy*|sit*|ip6tnl*) continue ;;
+            usb*|eth*|en*) ifc=$(basename "$dev"); break ;;
+        esac
+    done
+
+    sudo ip route del default dev "$ifc" 2>/dev/null
+    sudo ip addr flush dev "$ifc" 2>/dev/null
+    sudo ip link set "$ifc" down 2>/dev/null
+    # usb0 may still exist from an earlier gadget load even if another name won
+    [ "$ifc" != "usb0" ] && sudo ip link set usb0 down 2>/dev/null
     sudo modprobe -r g_ether 2>/dev/null
+
+    # Drop any cached probe verdict so the next start tests the real link
+    rm -f "$PROBE_FILE" "$PROBE_LOCK" 2>/dev/null
 }
 
 # ------------------------------------------------------------------------------
@@ -405,6 +559,8 @@ start_services() {
         echo -e "      ${C_GREEN}-> Gateway: 192.168.7.1 (Direct PC)${C_RESET}"
     fi
 
+    # Preserve the pristine DNS config before we replace it (idempotent)
+    backup_resolv_conf
     sudo rm -f /etc/resolv.conf 2>/dev/null
     echo -e "nameserver 1.1.1.1\nnameserver 8.8.8.8" | sudo tee /etc/resolv.conf >/dev/null
 
@@ -434,9 +590,14 @@ start_services() {
     echo -e "      ${C_GREEN}-> Samba: \\\\${ACTIVE_IP}\\roms${C_RESET}"
 
     echo -e "${C_YELLOW}[4/4] Verifying connection...${C_RESET}"
+    # One bounded probe here (2s max) with the cache primed afterwards, so the
+    # menu that follows always has a fresh verdict to display.
+    rm -f "$PROBE_FILE" 2>/dev/null
     if ping -c 1 -W 2 8.8.8.8 >/dev/null 2>&1; then
+        printf 'OK %s\n' "$(date +%s)" > "$PROBE_FILE" 2>/dev/null
         echo -e "      ${C_GREEN}-> Internet: ONLINE (PortMaster Ready)${C_RESET}"
     else
+        printf 'FAIL %s\n' "$(date +%s)" > "$PROBE_FILE" 2>/dev/null
         echo -e "      ${C_YELLOW}-> Local Link: CONNECTED${C_RESET}"
     fi
 
@@ -457,20 +618,27 @@ stop_services() {
     echo -e "${C_WHITE}   STOPPING WIRED SERVICES (BATTERY SAVER)  ${C_RESET}"
     echo -e "${C_CYAN}============================================${C_RESET}"
 
-    echo -e "${C_YELLOW}[1/3] Stopping OpenSSH server...${C_RESET}"
+    echo -e "${C_YELLOW}[1/4] Stopping OpenSSH server...${C_RESET}"
     sudo systemctl stop ssh.socket 2>/dev/null
     sudo systemctl stop ssh 2>/dev/null
-    sudo killall -9 sshd 2>/dev/null
+    kill_sshd_except_self
     echo -e "      ${C_GREEN}-> SSH server stopped.${C_RESET}"
 
-    echo -e "${C_YELLOW}[2/3] Stopping Samba server...${C_RESET}"
+    echo -e "${C_YELLOW}[2/4] Stopping Samba server...${C_RESET}"
     sudo systemctl stop smbd 2>/dev/null
     sudo killall -9 smbd 2>/dev/null
     echo -e "      ${C_GREEN}-> Samba server stopped.${C_RESET}"
 
-    echo -e "${C_YELLOW}[3/3] Shutting down USB network...${C_RESET}"
+    echo -e "${C_YELLOW}[3/4] Shutting down USB network...${C_RESET}"
     stop_usb_network
-    echo -e "      ${C_GREEN}-> usb0 down, gadget unloaded.${C_RESET}"
+    echo -e "      ${C_GREEN}-> Wired link down, gadget unloaded.${C_RESET}"
+
+    echo -e "${C_YELLOW}[4/4] Restoring original DNS configuration...${C_RESET}"
+    if restore_resolv_conf; then
+        echo -e "      ${C_GREEN}-> /etc/resolv.conf restored.${C_RESET}"
+    else
+        echo -e "      ${C_GRAY}-> Nothing to restore (no backup on record).${C_RESET}"
+    fi
 
     echo -e "${C_CYAN}============================================${C_RESET}"
     echo -e "${C_WHITE} SERVICES STOPPED! Returning in 2s...       ${C_RESET}"
@@ -581,6 +749,9 @@ while true; do
     # Polling loop for Gamepad and Keyboard input
     while true; do
         # 1. Gamepad Input via ArkOS buttonmon
+        # Every helper is existence-checked: some ArkOS builds ship a
+        # buttonmon.sh without Test_Button_Y/X/B, and an unguarded call there
+        # would silently disable those buttons entirely.
         if type Test_Button_A >/dev/null 2>&1; then
             Test_Button_A
             if [ "$?" -eq "10" ]; then
@@ -588,21 +759,27 @@ while true; do
                 while read -t 0.05 -n 1 _; do :; done 2>/dev/null
                 break
             fi
+        fi
 
+        if type Test_Button_Y >/dev/null 2>&1; then
             Test_Button_Y
             if [ "$?" -eq "10" ]; then
                 stop_services
                 while read -t 0.05 -n 1 _; do :; done 2>/dev/null
                 break
             fi
+        fi
 
+        if type Test_Button_X >/dev/null 2>&1; then
             Test_Button_X
             if [ "$?" -eq "10" ]; then
                 switch_hardware_mode
                 while read -t 0.05 -n 1 _; do :; done 2>/dev/null
                 break
             fi
+        fi
 
+        if type Test_Button_B >/dev/null 2>&1; then
             Test_Button_B
             if [ "$?" -eq "10" ]; then
                 printf "\033c" 2>/dev/null
