@@ -9,7 +9,7 @@
 # console TTY or emit TUI escape codes. Detect them before anything else runs.
 G350_CLI_MODE=0
 case "${1:-}" in
-    --refresh-net|--set-gateway) G350_CLI_MODE=1 ;;
+    --refresh-net|--set-gateway|--start-services) G350_CLI_MODE=1 ;;
 esac
 
 # Direct output to physical display if launched from EmulationStation
@@ -548,6 +548,56 @@ refresh_usb_network() {
 }
 
 # ------------------------------------------------------------------------------
+# Helper: Do exactly what pressing [A] does, for non-interactive use
+#
+# [A] (start_services) is interactive: it clears the screen, prints a banner and
+# sleeps at the end, and it refuses to run unless IS_PERIPHERAL was set by the
+# TUI's status detection. This performs the same steps without any of that, so
+# the PC can trigger it over SSH.
+#
+# It deliberately does NOT unload the g_ether gadget, so the link stays up for
+# the whole call. sshd and samba are restarted as part of the normal path.
+# ------------------------------------------------------------------------------
+start_services_cli() {
+    if ! lsmod | grep -q "g_ether"; then
+        sudo modprobe g_ether 2>/dev/null
+    fi
+    sudo ip addr flush dev usb0 2>/dev/null
+    sudo ip addr add 192.168.7.2/24 dev usb0 2>/dev/null
+    sudo ip addr add 192.168.137.2/24 dev usb0 2>/dev/null
+    sudo ip link set usb0 up 2>/dev/null
+
+    for _i in 1 2 3 4 5 6 7 8 9 10 11 12; do
+        [ "$(cat /sys/class/net/usb0/carrier 2>/dev/null)" = "1" ] && break
+        sleep 0.5
+    done
+
+    if ping -c 1 -W 1 192.168.137.1 >/dev/null 2>&1; then
+        sudo ip route replace default via 192.168.137.1 dev usb0 2>/dev/null
+        ACTIVE_GW="192.168.137.1"
+        ACTIVE_IP="192.168.137.2"
+    elif ping -c 1 -W 1 192.168.7.1 >/dev/null 2>&1; then
+        sudo ip route replace default via 192.168.7.1 dev usb0 2>/dev/null
+        ACTIVE_GW="192.168.7.1"
+        ACTIVE_IP="192.168.7.2"
+    fi
+
+    backup_resolv_conf
+    sudo rm -f /etc/resolv.conf 2>/dev/null
+    echo -e "nameserver 1.1.1.1
+nameserver 8.8.8.8" | sudo tee /etc/resolv.conf >/dev/null
+
+    start_ssh_server
+    sudo systemctl --no-block start smbd 2>/dev/null
+
+    rm -f "$PROBE_FILE" "$PROBE_LOCK" 2>/dev/null
+
+    gw=$(ip route 2>/dev/null | awk '/default/ {print $3; exit}')
+    printf 'gateway=%s ip=%s ssh=%s
+'         "${gw:-unknown}" "${ACTIVE_IP:-unknown}" "${SSH_OK:-0}"
+}
+
+# ------------------------------------------------------------------------------
 # Helper: Fully tear down the USB network link (IPs, route, interface, gadget)
 # ------------------------------------------------------------------------------
 stop_usb_network() {
@@ -815,6 +865,12 @@ switch_hardware_mode() {
 case "${1:-}" in
     --refresh-net)
         refresh_usb_network
+        exit 0
+        ;;
+    --start-services)
+        # Equivalent to pressing [A]: re-address usb0, re-pick the gateway,
+        # restart sshd and samba, rewrite resolv.conf.
+        start_services_cli
         exit 0
         ;;
     --set-gateway)
