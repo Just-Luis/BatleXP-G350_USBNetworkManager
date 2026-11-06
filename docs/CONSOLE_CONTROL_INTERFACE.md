@@ -81,9 +81,22 @@ Two non-interactive modes. When no argument is given nothing changes, so
 launching from EmulationStation behaves exactly as before.
 
 ```bash
-USB_Network_Manager.sh --refresh-net          # re-apply IPs + route, print result
+USB_Network_Manager.sh --start-services       # same as pressing [A]
+USB_Network_Manager.sh --refresh-net          # addressing + route only, no restarts
 USB_Network_Manager.sh --set-gateway <ip>     # force the route via <ip>
 ```
+
+### 3.0 `start_services_cli()` — the [A] equivalent
+
+`start_services()` itself cannot be called remotely: it clears the screen, prints
+a banner, sleeps, and refuses to run unless `IS_PERIPHERAL` was set by the TUI's
+status detection.
+
+`start_services_cli()` performs the same steps with none of that: re-address
+`usb0`, probe for the gateway, restore/rewrite `resolv.conf`, restart sshd and
+samba. Measured at **3.9 s** on hardware, with SSH staying up throughout.
+
+It never unloads `g_ether`, so the link survives the call.
 
 ### 3.1 `refresh_usb_network()`
 
