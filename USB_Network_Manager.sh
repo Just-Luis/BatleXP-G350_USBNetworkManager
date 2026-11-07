@@ -12,6 +12,18 @@ case "${1:-}" in
     --refresh-net|--set-gateway|--start-services) G350_CLI_MODE=1 ;;
 esac
 
+# Put the system sbin/bin tools on PATH explicitly.
+#
+# An SSH session is given PATH=/usr/local/bin:/usr/bin:/bin:/usr/games, and sudo
+# on this image sets no secure_path, so lsmod, modprobe, killall and several
+# iproute2 helpers are NOT found when this script is driven remotely. The
+# failure was silent wherever the call was followed by 2>/dev/null, which is how
+# it survived unnoticed: everything worked when launched from the console's own
+# TUI (whose PATH includes /sbin) and quietly did nothing over SSH.
+# Prepending the real directories fixes every call at once, including the ones
+# inside subshells and command substitutions.
+export PATH="/usr/sbin:/sbin:/usr/bin:/bin:$PATH"
+
 # Direct output to physical display if launched from EmulationStation
 if [ -z "$SSH_CONNECTION" ] && [ "$G350_CLI_MODE" -ne 1 ]; then
     for tty in /dev/tty0 /dev/tty1; do
@@ -475,7 +487,7 @@ start_ssh_server() {
     sleep 0.5
 
     # Single, sequential start (sshd daemonizes itself, no background race)
-    sudo /usr/sbin/sshd 2>/dev/null
+    sudo sshd 2>/dev/null
 
     # Wait up to ~6s for port 22 to really accept connections
     SSH_OK=0
@@ -556,13 +568,11 @@ g350_serial() {
 # Locally-administered unicast MACs are used: first octet 0x02 sets the
 # locally-administered bit and clears the multicast bit.
 #
-# modprobe is called by absolute path on purpose. An SSH session gets
-# PATH=/usr/local/bin:/usr/bin:/bin:/usr/games - no /sbin - and sudo here does
-# not set secure_path, so a bare `sudo modprobe` fails with "command not found".
-# Every existing call in this script had that bug: it worked when launched from
-# the console's own TUI (whose PATH includes /sbin) and failed silently over
-# SSH, with the error swallowed by 2>/dev/null. The module is normally already
-# loaded at boot, which is why it was never noticed.
+# modprobe resolves because PATH is fixed up at the top of this script; see the
+# note there. Before that, every remote load failed with "command not found",
+# silently, because the error was discarded by 2>/dev/null. It went unnoticed
+# because g_ether is normally already loaded at boot and the lsmod guard rarely
+# ran.
 # ------------------------------------------------------------------------------
 load_gadget() {
     local serial
@@ -578,19 +588,19 @@ load_gadget() {
         fi
 
         if [ -n "$dev_addr" ]; then
-            if sudo /sbin/modprobe g_ether iSerialNumber="G350-$serial" \
-                                         dev_addr="$dev_addr" 2>/dev/null; then
+            if sudo modprobe g_ether iSerialNumber="G350-$serial" \
+                                   dev_addr="$dev_addr" 2>/dev/null; then
                 return 0
             fi
         else
-            if sudo /sbin/modprobe g_ether iSerialNumber="G350-$serial" 2>/dev/null; then
+            if sudo modprobe g_ether iSerialNumber="G350-$serial" 2>/dev/null; then
                 return 0
             fi
         fi
     fi
 
     # Fallback: the original behaviour. The link must always come up.
-    sudo /sbin/modprobe g_ether 2>/dev/null
+    sudo modprobe g_ether 2>/dev/null
     return $?
 }
 
@@ -717,7 +727,7 @@ stop_usb_network() {
     sudo ip link set "$ifc" down 2>/dev/null
     # usb0 may still exist from an earlier gadget load even if another name won
     [ "$ifc" != "usb0" ] && sudo ip link set usb0 down 2>/dev/null
-    sudo /sbin/modprobe -r g_ether 2>/dev/null
+    sudo modprobe -r g_ether 2>/dev/null
 
     # Drop any cached probe verdict so the next start tests the real link
     rm -f "$PROBE_FILE" "$PROBE_LOCK" 2>/dev/null
