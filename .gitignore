@@ -6,20 +6,19 @@ ehthumbs.db
 Desktop.ini
 $RECYCLE.BIN/
 .DS_Store
+
 # ==========================================
-# Temporary Root Screenshots & Loose Images
-# (Ignores temporary test PNGs, but keeps ScreenShots/)
+# Temporary Loose Images
+# (ignores stray test PNGs, keeps ScreenShots/)
 # ==========================================
 *.png
 !ScreenShots/*.png
+
 # ==========================================
-# Internal / Scratch Documentation
+# Generated Helper Script
 # ==========================================
-PROJECT_DOCUMENTATION.md
-README_WIRED.md
-ISSUES_AND_POLISH_CHECKLIST.md
-.sh examples/
 .usb_network/*grabber*
+
 # ==========================================
 # IDE & Python Cache
 # ==========================================

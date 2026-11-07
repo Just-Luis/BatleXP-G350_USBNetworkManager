@@ -1,401 +1,430 @@
-# 🎮 Battle XP G350 USB Network Manager: Complete Community Guide & Tutorial
+# 🎮 Battle XP G350 USB Network Manager: Complete Community Guide
 
-> **Author:** Community Release / G350 Wired Project  
-> **Target Devices:** Battle XP G350 and compatible Rockchip RK3326 handheld consoles (RG351P, RGB20S, RK2020) running **dArkOS / ArkOS**.  
-> **Interface:** Single-file gamepad utility (`USB_Network_Manager.sh`) tailored for 3.5" handheld screens.
-
----
-
-## 📖 1. What is This Tool?
-
-Many budget handheld retro consoles like the **Battle XP G350** have powerful Rockchip RK3326 processors but **no internal Wi-Fi chip**. Traditionally, adding games or downloading updates required physically removing the MicroSD card every time, putting it into a PC reader, and reinserting it. This causes wear on the delicate spring slot, risks corrupting save files, and makes using tools like **PortMaster** or the **box-art scraper** nearly impossible without external dongles.
-
-**USB Network Manager** transforms your console's physical USB-C port into a **high-speed bidirectional networking bridge** connected directly to your PC with a single USB cable.
-
-### What it gives you:
-* 🌐 **Full Internet Access on the Console:** Download games directly in **PortMaster**, scrape box art and metadata in **EmulationStation**, and update **RetroArch** cores/cheats through PC Internet Tethering.
-* ⚡ **High-Speed ROM Transfers (SFTP):** Connect with **WinSCP**, **FileZilla**, or **Cyberduck** on Port 22 (`ark`/`ark`) to transfer multi-gigabyte PS1, Dreamcast, and N64 ROMs at native USB 2.0 speeds (~25–35 MB/s).
-* 📁 **Windows File Explorer Integration (Samba):** Access your games folder directly from Windows Explorer at `\\192.168.137.2\roms` as a network drive.
-* 🕹️ **Zero Clutter:** A single, self-contained file in your **TOOLS** (recommended) or **PORTS** menu that handles mode switching, IP configuration, gateway routing, and service management with full gamepad navigation.
+> **Target devices:** Battle XP G350 and compatible Rockchip RK3326 handhelds
+> (RG351P, RGB20S, RK2020) running **dArkOS / ArkOS**.
+> **Interface:** a single gamepad-driven script, `USB_Network_Manager.sh`,
+> sized for a 3.5" screen.
+> **Scope:** this guide uses **only the console script and Windows**. Nothing
+> else needs to be installed on the PC.
 
 ---
 
-## 🔌 2. Hardware Requirements
+## 📖 1. What this tool does
 
-Before starting, make sure you have the right cable:
+Many budget handhelds, including the **Battle XP G350**, run a capable Rockchip
+RK3326 processor but have **no internal Wi-Fi**. Loading games therefore means
+removing the MicroSD card every time, which wears the spring slot and risks
+corrupting saves. PortMaster, box-art scraping and RetroArch updates are all out
+of reach without a dongle.
 
-| Component | Requirement | Why? |
+**USB Network Manager** turns the console's USB-C port into a **bidirectional USB
+network bridge** to a PC, over one cable.
+
+### What it gives you
+
+* 🌐 **Internet on the console.** Download ports in **PortMaster**, scrape art in
+  **EmulationStation**, and update **RetroArch** cores through the PC's
+  connection.
+* ⚡ **Fast ROM transfers.** Connect with **WinSCP**, **FileZilla** or
+  **Cyberduck** on port 22 (`ark` / `ark`) and move files at native USB 2.0
+  speeds, typically 25–35 MB/s.
+* 📁 **File Explorer access.** Reach the games folder as a network path at
+  `\\192.168.7.2\roms` or `\\192.168.137.2\roms`.
+* 🕹️ **No clutter.** One self-contained file in the **TOOLS** (recommended) or
+  **PORTS** menu, driven entirely by the console's buttons.
+* 🔋 **On-demand only.** Services start when you ask and stop when you are done,
+  so offline gaming uses no extra power.
+
+---
+
+## 🔌 2. What you need
+
+| Component | Requirement | Why |
 | :--- | :--- | :--- |
-| **Console** | Battle XP G350 (dArkOS / ArkOS) | Tested on RK3326 kernel with `g_ether` gadget driver. |
-| **Cable** | **USB-A to USB-C Data Cable** | **CRITICAL:** Use a standard USB-A to USB-C cable (USB-A to PC, USB-C to handheld). |
-| **PC** | Windows 10 or 11 | Connected to home Wi-Fi or Ethernet. |
+| **Console** | Battle XP G350 (dArkOS / ArkOS) | Tested on RK3326 with the `g_ether` gadget driver |
+| **Cable** | **USB-A to USB-C data cable** | USB-A into the PC, USB-C into the handheld |
+| **PC** | Windows 10 or 11 | Connected to Wi-Fi or Ethernet for internet sharing |
 
 > [!CAUTION]
-> **Avoid USB-C to USB-C cables!**  
-> Budget handheld consoles lack dual 5.1kΩ CC pull-down resistors on their USB-C ports. Using a USB-C to USB-C cable from a modern laptop or motherboard will not negotiate power or data lines. Always use a standard **USB-A (PC) to USB-C (handheld)** data cable.
+> **Do not use a USB-C to USB-C cable.** Budget handhelds lack the dual 5.1 kΩ CC
+> pull-down resistors on their USB-C port, so a C-to-C link will not negotiate
+> power or data. Always use **USB-A (PC) to USB-C (handheld)**.
 
 ---
 
-## 💾 3. First-Time Setup: Transfer & Paste to Your Console First!
+## 💾 3. Install the script on the console
 
 > [!IMPORTANT]
-> **This tool must be transferred and pasted onto your console BEFORE you can use it.**  
-> `USB_Network_Manager.sh` is a completely self-contained, single-file script. You do not need to install packages or extract complex folders onto your device—simply copy this single `.sh` file into one of your console's system folders.
+> The script must be copied onto the console before it can be used.
+> `USB_Network_Manager.sh` is self-contained: no packages, no extra folders.
 
-### 📁 Where to Paste the Tool: `tools/` vs `ports/`
+### Where to put it: `tools/` vs `ports/`
 
-You have two choices for where to paste `USB_Network_Manager.sh` on your console's storage. We **strongly recommend the `tools/` folder**:
-
-| Destination Folder | Recommendation | Where It Shows in EmulationStation | Why Choose This? |
+| Destination | Recommendation | Appears in | Why |
 | :--- | :---: | :--- | :--- |
-| **`tools/`** | **⭐ STRONGLY RECOMMENDED** | Under the **TOOLS** system menu | **Best organization.** Keeps system utilities (PortMaster, ThemeMaster, USB Network Manager) grouped together and keeps your games list clean. |
-| **`ports/`** | Alternative Option | Under the **PORTS** games menu | Useful if your custom EmulationStation theme hides the Tools section, or if you prefer running all custom scripts from Ports. |
+| **`tools/`** | **⭐ Recommended** | **TOOLS** menu | Keeps utilities (PortMaster, ThemeMaster, this script) together and leaves your game list clean |
+| **`ports/`** | Alternative | **PORTS** menu | Use this if your theme hides the TOOLS section |
 
-#### 📂 Visual Folder Structure on Your MicroSD Card:
+**Recommended layout on the MicroSD card:**
 
-**⭐ Recommended Setup (`tools/` folder):**
 ```text
 MicroSD Card (EASYROMS or roms)
 ├── bios/
 ├── roms/
-├── tools/                        <-- ⭐ RECOMMENDED DESTINATION
-│   ├── USB_Network_Manager.sh    <-- Paste file here!
+├── tools/                        <-- recommended destination
+│   ├── USB_Network_Manager.sh    <-- paste the file here
 │   ├── PortMaster.sh
 │   └── ThemeMaster.sh
 └── ports/
-    └── (Your port games: Apotris, Cave Story, etc.)
+    └── (your port games)
 ```
 
-**Alternative Setup (`ports/` folder):**
+**Alternative layout:**
+
 ```text
 MicroSD Card (EASYROMS or roms)
 ├── bios/
 ├── tools/
-└── ports/                        <-- ALTERNATIVE DESTINATION
-    ├── USB_Network_Manager.sh    <-- Paste file here
-    └── (Your port games)
+└── ports/                        <-- alternative destination
+    ├── USB_Network_Manager.sh    <-- paste the file here
+    └── (your port games)
 ```
 
----
+### Step-by-step transfer
 
-### 📝 Step-by-Step Transfer Guide
+**Step 1 — Shut the console down safely.** Press `START` → **Quit** →
+**Shutdown System** → **Yes**. Wait until the screen and the power LED are fully
+off. Never pull the card while the console is running.
 
-Follow these steps to copy the tool to your console for the first time:
+**Step 2 — Remove the MicroSD card.**
 
-#### Step 1: Safely Shut Down Your Handheld
-Never pull out a MicroSD card while the console is powered on, as this can corrupt filesystem data.
-* On your console, press `START` to open the Main Menu.
-* Select **Quit** -> **Shutdown System** -> Confirm **Yes**.
-* Wait until the screen and power LED turn completely off.
+* **Dual-card consoles** (G350, RG351V, RGB20S): remove the card from the
+  **TF2 / EXT / GAME** slot, which holds your ROMs and tools.
+* **Single-card consoles**: remove the card from the **TF1 / OS** slot.
 
-#### Step 2: Remove the MicroSD Card
-* **Dual-Card Consoles (e.g. Battle XP G350, RG351V, RGB20S):**  
-  Remove the card from the **TF2 / EXT / GAME** slot (the secondary slot containing your ROMs and tools).
-* **Single-Card Consoles:**  
-  Remove the card from the **TF1 / OS** slot.
+**Step 3 — Open the storage partition.** Insert the card into a card reader, open
+File Explorer, and open the drive labelled **`EASYROMS`** (or `roms`).
 
-#### Step 3: Insert into PC & Open the Storage Partition
-* Insert the MicroSD card into your computer's card reader or USB adapter.
-* Open Windows File Explorer (`Win + E`).
-* Open the drive labeled **`EASYROMS`** (or `roms`).
+**Step 4 — Paste the file.** Open **`tools`** (recommended) or **`ports`**, then
+copy **`USB_Network_Manager.sh`** into it.
 
-#### Step 4: Paste `USB_Network_Manager.sh`
-* In the `EASYROMS` drive, open the **`tools`** folder (recommended) or the **`ports`** folder.
-* Copy **`USB_Network_Manager.sh`** and paste it directly inside that folder.
+**Step 5 — Eject and power on.** Right-click the drive and choose **Eject**.
+Reinsert the card and switch the console on.
 
-#### Step 5: Safely Eject and Power On
-* Right-click the MicroSD drive letter in Windows File Explorer and click **Eject**.
-* Insert the card back into your handheld's slot.
-* Power on the console.
+**Step 6 — Find it in EmulationStation.**
 
-#### Step 6: Locate in EmulationStation
+*If you used `tools/`:* press **START** → **OPTIONS** → **Tools**.
 
-* **If you pasted into `tools/` (Recommended):**  
-  In EmulationStation, press **START** to open the Main Menu, and go to **OPTIONS**:  
+![Main Menu](ScreenShots/screenshotmenu.png)
+*Figure 1: Press START and open OPTIONS.*
 
-  ![Main Menu](ScreenShots/screenshotmenu.png)  
-  *Figure 1: Press START to open the Main Menu and go to OPTIONS.*  
+![Options Menu](ScreenShots/screenshotoptions.png)
+*Figure 2: Select Tools.*
 
-  Inside the Options list, select **Tools**:  
+**`USB_Network_Manager`** is listed alongside *PortMaster* and *ThemeMaster*:
 
-  ![Options Menu](ScreenShots/screenshotoptions.png)  
-  *Figure 2: Select Tools.*  
+![Tools Menu](ScreenShots/screenshottools.png)
+*Figure 3: USB_Network_Manager in the Tools menu.*
 
-  You will see **`USB_Network_Manager`** listed alongside *PortMaster* and *ThemeMaster*:  
+*If you used `ports/`:* navigate to **PORTS** on the main carousel.
 
-  ![Tools Menu](ScreenShots/screenshottools.png)  
-  *Figure 3: USB_Network_Manager inside the Tools menu.*
-
-* **If you pasted into `ports/` (Alternative):**  
-  Navigate to the **PORTS** section on the main carousel:  
-
-  ![Ports Menu](ScreenShots/Port.png)  
-  *Figure 4: USB Network Manager in the Ports list.*
+![Ports Menu](ScreenShots/Port.png)
+*Figure 4: USB Network Manager in the Ports list.*
 
 > [!TIP]
-> **Want to refresh without restarting?**  
-> If you transferred the file over an existing connection or while EmulationStation was running, you don't need to reboot the console:  
-> 1. Open any game collection (e.g., **Ports**, **GBA**, **SNES**, etc.).  
-> 2. Press **`SELECT`** on your handheld.  
-> 3. Choose **Update Game List**.  
-> 
-> The new entry will be scanned and appear immediately!
+> **Refreshing without a reboot.** If you copied the file while EmulationStation
+> was already running, open any collection (Ports, GBA, SNES…), press **SELECT**
+> and choose **Update Game List**. The entry appears immediately.
 
 ---
 
-## 🕹️ 4. Preparing Your Console (Switch Mode & Start Services)
+## 🕹️ 4. Start services on the console
 
 > [!IMPORTANT]
-> **CRITICAL ORDER OF OPERATIONS:**  
-> You MUST configure and start wired services on your console **before** setting up your Windows PC!  
-> If the console is in USB Host mode or hasn't started its USB gadget driver (`g_ether`), your computer will not detect any USB device at all, and no network adapter will appear in Windows.
+> **Order matters.** Start the services on the console **before** configuring
+> Windows. If the console is in USB Host mode, or the `g_ether` gadget is not
+> loaded, the PC will not see any USB device and no network adapter will appear.
 
-### Step 1: Connect the USB Cable
-* Plug the standard **USB-A** end into your Windows PC.
-* Plug the **USB-C** end into the console's **OTG / DC** port.
+### Step 1 — Connect the cable
 
-### Step 2: Open USB Network Manager
-* On your console, navigate to **TOOLS** (recommended) or **PORTS** in EmulationStation.
-* Launch **`USB Network Manager`**.
+Plug the **USB-A** end into the PC and the **USB-C** end into the console's
+**OTG / DC** port.
 
-### The On-Screen Display:
-The menu provides a live overview of your connection and hardware mode directly on your console's screen:
+### Step 2 — Launch the dashboard
 
-![USB Network Manager Console Display](ScreenShots/USBNM.png)  
-*Figure 5: Live USB Network Manager dashboard on the Battle XP G350 display.*
+Open **TOOLS** (or **PORTS**) and launch **`USB Network Manager`**. The dashboard
+shows the live connection and hardware mode on the console screen:
 
-### Gamepad Controls:
+![USB Network Manager dashboard](ScreenShots/USBNM.png)
+*Figure 5: The dashboard on the Battle XP G350 display.*
 
-| Button | Function | When to Use |
-| :---: | :--- | :--- |
-| **[X]** | **Switch Hardware Mode** *(Reboots, 5s)* | Toggles the hardware USB PHY between **Wired PC** and **USB Host**. Check `USB MODE`: if it shows `USB HOST`, press **[X]** now to switch to `WIRED PC Mode` (the console will save and reboot). |
-| **[A]** | **Start Wired Services** *(Instant, ~2s)* | Loads the `g_ether` gadget driver, binds IP `192.168.137.2`, and launches OpenSSH & Samba. **This creates the virtual network adapter that Windows will recognize.** |
-| **[Y]** | **Stop Services (Battery Saver)** *(Instant, ~1s)* | Run this when you unplug the cable to turn off background daemons and save battery while gaming. |
-| **[B]** | **Exit** | Returns cleanly to EmulationStation. |
+### Dashboard controls
 
-### Step 3: Check Mode & Press [A]
-1. Look at **`USB MODE`** at the top of the screen:
-   * If it says **`WIRED PC (Peripheral)`**: You are in the right mode!
-   * If it says **`USB HOST (OTG Pendrives)`**: Press **`[X]`** to switch to Wired PC mode. Allow the console to reboot, then relaunch **USB Network Manager**.
-2. Press **`[A]`** (*Start Services*).
-3. In ~2 seconds, the console initializes the USB Ethernet interface (`usb0`) and starts OpenSSH and Samba.
+| Button | Action | Speed | What it does |
+| :---: | :--- | :--- | :--- |
+| **[X]** | Switch hardware mode | reboots (~5 s) | Toggles the USB PHY between **Wired PC** and **USB Host** |
+| **[A]** | Start wired services | ~2 s | Loads `g_ether`, assigns both console addresses, starts OpenSSH and Samba |
+| **[Y]** | Stop services | ~1 s | Stops the daemons to save battery while gaming |
+| **[B]** | Exit | instant | Returns to EmulationStation |
+
+### Step 3 — Check the mode, then press [A]
+
+1. Read **`USB MODE`** at the top of the screen.
+   * **`WIRED PC (Peripheral)`** — correct, continue.
+   * **`USB HOST (OTG Pendrives)`** — press **[X]**, let the console reboot, then
+     launch the dashboard again.
+2. Press **[A]**. Within about two seconds the console brings up `usb0` and
+   starts SSH and Samba.
 
 > [!TIP]
-> Now that the console's USB Ethernet gadget is live, Windows will play a connection chime and detect the new adapter. You can now configure Windows Internet Connection Sharing!
+> Windows plays a device-connection chime once the gadget is live. That means the
+> adapter now exists and is ready to configure.
 
 ---
 
-## 🖥️ 5. Windows PC Setup (One-Time Setup)
+## 🖥️ 5. Configure Windows (one-time)
 
-Now that your console is running in Wired PC mode with services active, Windows will detect a new network adapter named **`Remote NDIS based Internet Sharing Device`** (typically labeled **Ethernet 2**).
+Windows will show a new adapter named **`Remote NDIS based Internet Sharing
+Device`**, usually numbered **Ethernet 2**.
 
-This one-time setup consists of two simple steps:
-1. **Set the Static IP on Ethernet 2:** Configure the console's adapter once with `192.168.7.1`. **Keep it configured like this permanently** so direct file transfers always work without IP conflicts!
-2. **Configure Wi-Fi Sharing:** Toggle this on when you want Internet on the console (PortMaster, Scraping). File transfers (SFTP) keep working while sharing is on, so you never *have* to turn it off.
+Two settings, done once:
 
----
+1. **A static address on that adapter** (`192.168.7.1`). Leave it in place
+   permanently.
+2. **Internet sharing on your Wi-Fi adapter**, switched on only when the console
+   needs internet.
 
-### Step 1: Configure Static IP on Console Adapter (`Ethernet 2`)
+### Step 1 — Static address on the console adapter
 
 > [!IMPORTANT]
-> **Always Keep This Configured:**  
-> This static IP setting is applied directly to **Ethernet 2** (the console's adapter). Once configured, you leave it like this permanently!
+> This is set once and then left alone. It does not need to be changed when you
+> toggle internet sharing.
 
-1. On your Windows PC, press `Win + R`, type `ncpa.cpl`, and hit **Enter** to open **Network Connections**:  
+1. Press `Win + R`, type `ncpa.cpl` and press **Enter**.
 
-   ![Run ncpa.cpl](ScreenShots/Win+R.png)  
-   *Figure 6: Press Win + R and enter ncpa.cpl.*
+   ![Run ncpa.cpl](ScreenShots/Win+R.png)
+   *Figure 6: Open Network Connections.*
 
-2. Locate the console's network adapter (**Ethernet 2** with device description `Remote NDIS based Internet Sharing Device`). Right-click it and select **Properties**:  
+2. Right-click the console adapter and choose **Properties**.
 
-   ![Right-click Ethernet 2](ScreenShots/ethernet2.png)  
-   *Figure 7: Right-click Ethernet 2 (Remote NDIS) and select Properties.*
+   ![Right-click Ethernet 2](ScreenShots/ethernet2.png)
+   *Figure 7: The Remote NDIS adapter.*
 
-3. In the list, double-click **Internet Protocol Version 4 (TCP/IPv4)**:  
+3. Double-click **Internet Protocol Version 4 (TCP/IPv4)**.
 
-   ![Ethernet 2 Properties](ScreenShots/ethernet2properties.png)  
-   *Figure 8: Double-click Internet Protocol Version 4 (TCP/IPv4).*
+   ![Ethernet 2 Properties](ScreenShots/ethernet2properties.png)
+   *Figure 8: Open the IPv4 settings.*
 
-4. Select **"Use the following IP address"** and enter:  
-   * **IP address:** `192.168.7.1`  
-   * **Subnet mask:** `255.255.255.0`  
-   * **Default gateway:** *(leave completely blank)*  
+4. Choose **Use the following IP address** and enter:
+   * **IP address:** `192.168.7.1`
+   * **Subnet mask:** `255.255.255.0`
+   * **Default gateway:** leave blank
 
-   ![Static IP Configuration](ScreenShots/ethernet2ip.png)  
-   *Figure 9: Set IP to 192.168.7.1 and Subnet mask to 255.255.255.0.*
+   ![Static IP](ScreenShots/ethernet2ip.png)
+   *Figure 9: 192.168.7.1 with a /24 mask and no gateway.*
 
-5. Click **OK**, then click **OK** again to apply and save.  
-   *(Leave this adapter configured like this permanently! You never need to touch it again).*
+5. Click **OK**, then **OK** again.
 
----
+### Step 2 — Share the PC's internet
 
-### Step 2: Configure Wi-Fi Internet Tethering (For PortMaster & Scrapers)
+1. In `ncpa.cpl`, right-click your active **Wi-Fi** adapter and choose
+   **Properties**.
 
-Whenever you want the console to access the internet (to download ports in PortMaster, scrape box art, or update cores), simply enable sharing on your active Wi-Fi adapter:
+   ![Network Connections](ScreenShots/Network.png)
+   *Figure 10: Select the Wi-Fi adapter.*
 
-1. In `ncpa.cpl`, **right-click your active Wi-Fi adapter** -> Select **Properties**:  
+2. Open the **Sharing** tab.
+3. Tick **Allow other network users to connect through this computer's Internet
+   connection**.
+4. Under *Home networking connection*, choose the console's adapter
+   (**Ethernet 2**).
+5. Click **OK**.
 
-   ![Network Connections](ScreenShots/Network.png)  
-   *Figure 10: Right-click your active Wi-Fi adapter and select Properties.*
-
-2. Click the **Sharing** tab at the top.
-3. Check the box:  
-   `[✓] Allow other network users to connect through this computer's Internet connection`
-4. In the dropdown under *Home networking connection*, select your console's adapter (**Ethernet 2**).
-5. Click **OK**:  
-
-   ![Wi-Fi Sharing Settings](ScreenShots/NetworkProperties.png)  
-   *Figure 11: Configure Internet Sharing for Ethernet 2.*
+   ![Wi-Fi Sharing](ScreenShots/NetworkProperties.png)
+   *Figure 11: Share the Wi-Fi connection with Ethernet 2.*
 
 > [!TIP]
-> **Instant Live Verification:** Look at your console screen!  
-> Within a few seconds of clicking OK, **`GATEWAY`** will change to `192.168.137.1 (Online)` and **`INTERNET`** will change to `ONLINE (PortMaster Ready)`.  
-> *(If it does not automatically update right away, simply press **`[A]`** again on your handheld to force a status check and refresh the gateway).*
+> **Verify it on the console.** Within a few seconds of clicking OK, **`GATEWAY`**
+> changes to `192.168.137.1 (Online)` and **`INTERNET`** changes to
+> `ONLINE (PortMaster Ready)`. If it has not updated, press **[A]** on the
+> handheld to force a status refresh.
+
+### The rule for daily use
+
+* 🌐 **Need internet on the console** (PortMaster, scraping, updates):
+  sharing **ON** in `ncpa.cpl`.
+* ⚡ **Need to move files** (WinSCP, FileZilla, Explorer): connect to the address
+  that matches the current mode.
+
+| Sharing | PC adapter | Connect to |
+| :--- | :--- | :--- |
+| **ON** (Windows ICS) | `192.168.137.1` | **`192.168.137.2`** |
+| **OFF** (direct) | `192.168.7.1` | **`192.168.7.2`** |
+
+The console answers on both addresses and shows the active one under `IP ADDR`.
+You do **not** need to turn sharing off to transfer files.
 
 ---
 
-### 🔄 The Golden Rule for Daily Use:
-* 🌐 **When using Internet on your console (PortMaster, Scraping, Updates):**  
-  Turn Wi-Fi sharing **ON** in `ncpa.cpl`.
-* ⚡ **When transferring games & ROMs (WinSCP, FileZilla, Windows Explorer):**  
-  Connect to the console IP that matches your current mode:  
-  * **Wi-Fi sharing ON** → Windows moves `Ethernet 2` to `192.168.137.1`, so connect to **`192.168.137.2`**.  
-  * **Wi-Fi sharing OFF** → Windows restores `Ethernet 2` to `192.168.7.1`, so connect to **`192.168.7.2`**.  
-  *(The console answers on both addresses, and its screen shows the active one under `IP ADDR`. You do **not** need to turn sharing off to transfer files.)*
+## 🚀 6. Daily workflows
 
----
+### Workflow A — PortMaster without Wi-Fi
 
-## 🚀 6. Daily Workflows
-
-### Workflow A: Downloading Games with PortMaster (No Wi-Fi Needed)
-1. Plug the USB cable from your PC into the console's **OTG / DC** port.
+1. Connect the USB cable to the console's **OTG / DC** port.
 2. Launch **USB Network Manager** from **TOOLS** (or **PORTS**).
-3. Press **[A]** (*Start Services*). In 2 seconds, you will see `INTERNET : ONLINE`.
-4. Ensure Windows Wi-Fi sharing is **ON** in `ncpa.cpl`.
-5. Press **[B]** to exit to EmulationStation.
-6. Open **PortMaster** (in Ports or Tools) and browse/download ports directly over your PC's internet!
-7. Once finished, open **USB Network Manager** and press **[Y]** to power down background daemons and conserve battery.
+3. Press **[A]**. Within two seconds `INTERNET : ONLINE` appears.
+4. Make sure Windows Wi-Fi sharing is **ON** in `ncpa.cpl`.
+5. Press **[B]** to return to EmulationStation.
+6. Open **PortMaster** and download ports over the PC's connection.
+7. When finished, reopen **USB Network Manager** and press **[Y]** to stop the
+   daemons and save battery.
 
-### Workflow B: Transferring ROMs via Windows File Explorer (Samba)
+### Workflow B — Transfer files with Windows Explorer (Samba)
+
 > [!NOTE]
-> **Samba Status:** Samba file sharing has not been fully tested yet. Windows 11 automatically blocks unauthenticated / guest network shares by default, so testing is required.
-> **👉 We recommend Workflow C (SFTP via WinSCP / FileZilla) below.** SFTP connects reliably at native USB 2.0 speeds (~25–35 MB/s) and is 100% tested and verified.
+> **Samba is not fully tested.** Windows 11 blocks unauthenticated guest shares by
+> default and may need extra configuration.
+> **Workflow C (SFTP) is recommended instead** — it is verified and reliably fast.
 
+1. Connect the cable and press **[A]**.
+2. Press `Win + E` to open File Explorer.
+3. Type `\\192.168.7.2\roms` in the address bar and press **Enter**.
+4. If asked for credentials: username `ark`, password `ark`.
+5. Drag game files into the system folders (`gba`, `snes`, `psx`, …).
 
-1. Plug in the USB cable and press **[A]** in **USB Network Manager**.
-2. On your Windows PC, press `Win + E` to open File Explorer.
-3. In the address bar at the top, type:  
-   `\\192.168.7.2\roms`  
-   and press **Enter**.
-4. If prompted for network credentials:
+### Workflow C — Transfer files with SFTP (recommended)
+
+> [!NOTE]
+> **Which address?** Use the `IP ADDR` shown on the console screen.
+> Sharing **ON** → `192.168.137.2`. Sharing **OFF** → `192.168.7.2`.
+> Both work, and sharing does not need to be turned off.
+
+> [!TIP]
+> No SFTP client yet? [Download WinSCP](https://winscp.net/eng/download.php) from
+> the official site.
+
+1. Connect the cable and press **[A]**.
+2. Note the `IP ADDR` on the console screen.
+3. Open **WinSCP** and click **+** or **New Tab**.
+
+   ![WinSCP Add Connection](ScreenShots/winSCPAddNewConnection.png)
+   *Figure 12: Add a new connection.*
+
+4. Enter:
+   * **Protocol:** `SFTP`
+   * **Host:** `192.168.137.2` (sharing on) or `192.168.7.2` (sharing off)
+   * **Port:** `22`
    * **Username:** `ark`
    * **Password:** `ark`
-5. Drag and drop your game files directly into your console's game folders (`gba`, `snes`, `psx`, etc.).
 
-### Workflow C: Transferring ROMs via SFTP (WinSCP / FileZilla)
-> [!NOTE]
-> **Which IP do I use?**  
-> Use the `IP ADDR` shown on the console screen. With Wi-Fi sharing **ON** connect to `192.168.137.2`; with sharing **OFF** connect to `192.168.7.2`. Both work for SFTP, and sharing does not need to be turned off.
-
-> [!TIP]
-> **Don't have WinSCP installed?**  
-> If you don't have an SFTP client on your PC, download the free official installer here:  
-> 📥 **[Download WinSCP (Official Site)](https://winscp.net/eng/download.php)**
-
-1. Plug in the USB cable and press **[A]** in **USB Network Manager**.
-2. Note the `IP ADDR` shown on the console screen (`192.168.137.2` with Wi-Fi sharing ON, `192.168.7.2` with it OFF).
-3. Open **WinSCP** on your PC. Click **+** or **New Tab** to add a new connection:  
-
-   ![WinSCP Add Connection](ScreenShots/winSCPAddNewConnection.png)  
-   *Figure 12: Click + or New Tab to add a new connection in WinSCP.*
-
-4. Configure your connection settings:  
-   * **Protocol:** `SFTP`  
-   * **Host:** `192.168.137.2` (sharing ON) or `192.168.7.2` (sharing OFF)  
-   * **Port:** `22`  
-   * **Username:** `ark`  
-   * **Password:** `ark`  
-
-   ![WinSCP Login Dialog](ScreenShots/WinSCPConnect.png)  
-   *Figure 13: WinSCP SFTP login parameters (192.168.7.2, port 22, ark / ark).*
+   ![WinSCP Login](ScreenShots/WinSCPConnect.png)
+   *Figure 13: SFTP login parameters.*
 
    > [!TIP]
-   > **Save Your Login for Next Time:**  
-   > Click the **Save** button (located directly beneath the *Username* field). WinSCP will save this session to your site list on the left (e.g., as `ark@192.168.7.2`), so next time you can connect instantly with a single double-click without having to re-enter your IP address, username, or password!
+   > Click **Save** beneath the username field to store the session, so the next
+   > connection is a double-click.
 
-5. Click **Login**. WinSCP connects and opens in `/home/ark/`.
-6. To reach your games, click the path bar at the top:  
+5. Click **Login**. WinSCP opens in `/home/ark/`.
+6. Click the path bar.
 
-   ![WinSCP Go To Roms](ScreenShots/winSCPGoToRoms.png)  
-   *Figure 14: Click the directory path bar to navigate to /roms/.*
+   ![WinSCP path bar](ScreenShots/winSCPGoToRoms.png)
+   *Figure 14: Click the directory path bar.*
 
-7. Type **`/roms`** and click **OK**:  
+7. Type **`/roms`** and click **OK**.
 
-   ![WinSCP Open Directory](ScreenShots/winSCPGoToRoms2.png)  
-   *Figure 15: Enter /roms to open your console's game folders.*
+   ![WinSCP open /roms](ScreenShots/winSCPGoToRoms2.png)
+   *Figure 15: Open the games folder.*
 
-8. You now have full access to drag and drop ROMs directly into your system folders (`gba`, `snes`, `psx`, etc.) at native USB speeds (~25–35 MB/s)!
+8. Drag and drop ROMs into the system folders (`gba`, `snes`, `psx`, …).
 
-### Workflow D: Switching Between PC Mode and Flash Drive (Host) Mode
-The Rockchip RK3326 chip uses different hardware transceiver configurations for connecting to a PC (Device/Peripheral) vs hosting USB drives (Host/OTG):
+### Workflow D — Switch between PC mode and USB Host mode
 
-* **To connect a USB flash drive or external gamepad:**  
-  Open **USB Network Manager** -> Press **[X]** (*Switch to USB HOST Mode*).  
-  The console will save the setting and reboot in 5 seconds into USB Host mode.
-* **To connect back to PC for internet/files:**  
-  Open **USB Network Manager** -> Press **[X]** (*Switch to WIRED PC Mode*).  
-  The console reboots in 5 seconds into Wired PC mode. Once back in EmulationStation, press **[A]** to start services!
+The RK3326 uses different hardware transceiver configurations for connecting to a
+PC (peripheral) versus hosting a drive (host).
 
----
-
-## 🛠️ 7. Testing Your Connection from Windows
-
-The project includes ready-to-run 1-click test utilities on your PC:
-
-* **`Test_Internet_On_G350.bat`**: Pings the console, executes a remote ping to Google DNS (`8.8.8.8`) from inside the console, and tests DNS resolution (`github.com`).
-* **`Test_Connection_G350.bat`**: Tests local physical cable link and SSH port 22 response.
-
-Double-click **`Test_Internet_On_G350.bat`** on your PC to see live diagnostic output:
-
-![Internet Tethering Test Output](ScreenShots/Internettest.png)  
-*Figure 16: Live execution of Test_Internet_On_G350.bat showing all tests passing.*
+* **To use a flash drive or external gamepad:** open **USB Network Manager**,
+  press **[X]** (*Switch to USB HOST Mode*), and let the console reboot.
+* **To return to PC mode:** open **USB Network Manager**, press **[X]**
+  (*Switch to WIRED PC Mode*), let it reboot, then press **[A]** to start
+  services.
 
 ---
 
-## ❓ 8. Frequently Asked Questions & Troubleshooting
+## 🛠️ 7. Test the connection from Windows
 
-### Q: Why do I have to press [A] to start services instead of having it run automatically on boot?
-**A:** ArkOS is an operating system optimized for battery longevity and fast game loading. Running persistent networking daemons on boot consumes CPU cycles, drains battery while playing games offline, and causes kernel race conditions with ArkOS's power management watchdogs. The 1-click on-demand design gives you instant access in 2 seconds only when you actually need it.
+The repository includes two one-click test utilities:
 
-### Q: The Windows test says "Console is connected, but no Internet"?
-**A:** This means your physical cable is working, but Windows Internet Connection Sharing (ICS) is not forwarding packets.
-1. Open `ncpa.cpl` on your PC.
-2. Right-click your active **Wi-Fi** adapter -> **Properties** -> **Sharing**.
-3. **Uncheck** the sharing box, click **OK**, then reopen Properties and **re-check** the sharing box, selecting your console's Ethernet adapter. This refreshes the Windows NAT routing table.
+| Script | Checks |
+| :--- | :--- |
+| `Test_Internet_On_G350.bat` | Console ping, a remote ping to `8.8.8.8` from inside the console, and DNS resolution of `github.com` |
+| `Test_Connection_G350.bat` | Physical cable link and whether SSH port 22 answers |
 
-### Q: Why does the screen say "REBOOT PENDING"?
-**A:** You changed the USB mode with button **[X]**, but canceled the automatic reboot. The Rockchip USB transceiver cannot physically switch between Host and Peripheral modes while Linux is running—it must load the DTB on boot. Simply restart the console to complete the switch.
+Run **`Test_Internet_On_G350.bat`** and read the live output:
 
-### Q: Can I use `192.168.7.2` instead of `192.168.137.2`?
-**A:** Yes! The script automatically assigns **both** subnets (`192.168.137.2` and `192.168.7.2`) to the `usb0` interface. If Windows ICS is active, it uses `192.168.137.1` as the gateway. If you set a manual static IP on Windows, it seamlessly uses `192.168.7.1`.
-
-### Q: Do I need to copy the `.usb_network` folder to my console?
-**A:** **No, it is NOT required at all!** You only need the single file **`USB_Network_Manager.sh`**. The script is completely self-contained—all detection logic, IP assignments, gateway configuration, SSH/Samba daemons, and hardware mode toggles are built directly into `USB_Network_Manager.sh`. The `.usb_network/` folder is strictly optional for advanced users who want standalone terminal/SSH scripts without the interactive gamepad UI.
-
-### Q: Why does WinSCP, FileZilla, or SSH fail to connect or time out?
-**A:** When Windows Internet Connection Sharing (ICS) is turned ON, Windows firewall and NAT routing can intercept local inbound traffic to the console. Make sure you are using the right IP for your mode: with Wi-Fi sharing **ON**, Windows changes `Ethernet 2` to `192.168.137.1`, so connect to **`192.168.137.2`** (not `192.168.7.2`). With sharing **OFF**, Windows restores `192.168.7.1`, so connect to **`192.168.7.2`**. SFTP works in both modes, so you can transfer files and share internet at the same time.
+![Internet test output](ScreenShots/Internettest.png)
+*Figure 16: A passing run of Test_Internet_On_G350.bat.*
 
 ---
 
-## 📄 9. File Architecture Reference
+## ❓ 8. Questions and troubleshooting
 
-Depending on which folder you chose during installation, your files are organized cleanly on your console:
+### Why must [A] be pressed instead of starting at boot?
 
-### ⭐ Recommended Setup (Under `TOOLS`):
+ArkOS optimises for battery life and fast game loading. Persistent daemons at boot
+consume CPU and battery during offline play, and race with ArkOS's
+power-management watchdogs. Starting on demand gives access in about two seconds,
+only when it is needed.
+
+### The Windows test says "connected, but no Internet"
+
+The cable is fine; Windows Internet Connection Sharing is not forwarding packets.
+
+1. Open `ncpa.cpl`.
+2. Right-click your **Wi-Fi** adapter → **Properties** → **Sharing**.
+3. Untick the sharing box, click **OK**, then reopen it, re-tick it, select the
+   console adapter and click **OK**. This refreshes the NAT routing table.
+
+### The screen says "REBOOT PENDING"
+
+You pressed **[X]** but cancelled the reboot. The Rockchip transceiver cannot
+switch between host and peripheral while Linux is running — the device tree is
+loaded at boot. Restart the console to complete the switch.
+
+### Can I use `192.168.7.2` instead of `192.168.137.2`?
+
+Yes. The script assigns **both** addresses to `usb0`. With Windows ICS active the
+gateway is `192.168.137.1`; with a manual static address it is `192.168.7.1`.
+
+### Do the `.usb_network` helpers need to be copied to the console?
+
+**No.** Only `USB_Network_Manager.sh` is required. Detection, addressing, gateway
+selection, SSH and Samba, and the mode switch are all built in. The
+`.usb_network/` folder is optional, for running the same actions from a terminal
+or over SSH.
+
+### SSH or SFTP times out
+
+With ICS on, Windows firewall and NAT can intercept inbound traffic to the
+console. Check you are using the address for the current mode: sharing **ON** →
+`192.168.137.2`, sharing **OFF** → `192.168.7.2`. SFTP works in both modes, so
+you can transfer files and share internet at the same time.
+
+### The PC sees no adapter at all
+
+1. Confirm **`USB MODE`** reads **WIRED PC (Peripheral)**. Press **[X]** if not.
+2. Confirm services are started (**[A]**) — the gadget is not loaded until then.
+3. Try a different USB port on the PC, and a known-good USB-A to USB-C data cable.
+4. A disabled adapter in Windows is invisible to some tools. Check
+   `Get-NetAdapter` in PowerShell for an entry marked `Disabled`.
+
+---
+
+## 📄 9. Files on the console
+
 ```text
-/roms/tools/
-├── USB_Network_Manager.sh    <-- ONLY file required! (100% self-contained)
-└── .usb_network/             <-- OPTIONAL (Advanced CLI scripts, not required)
+/roms/tools/                        (or /roms/ports/)
+├── USB_Network_Manager.sh          <-- the only required file
+└── .usb_network/                   <-- optional command-line helpers
     ├── Start_Wired_Services.sh
     ├── Stop_Wired_Services.sh
     ├── Switch_USB_Mode.sh
@@ -403,16 +432,25 @@ Depending on which folder you chose during installation, your files are organize
     └── COMMUNITY_TUTORIAL.md
 ```
 
-### Alternative Setup (Under `PORTS`):
-```text
-/roms/ports/
-├── USB_Network_Manager.sh    <-- ONLY file required! (100% self-contained)
-└── .usb_network/             <-- OPTIONAL (Advanced CLI scripts, not required)
-    ├── Start_Wired_Services.sh
-    ├── Stop_Wired_Services.sh
-    ├── Switch_USB_Mode.sh
-    ├── USB_Status_Check.sh
-    └── COMMUNITY_TUTORIAL.md
-```
+The helpers are not needed for normal use. They exist for running the same actions
+over SSH.
 
-Enjoy downloading games and managing your files over high-speed USB! 🕹️🎉
+---
+
+## 🔗 10. Optional: automate the PC side
+
+Everything in this guide can be done by hand. If you would rather not configure
+Windows manually, [G350 Companion](https://github.com/Just-Luis/G350ConnectionManager)
+is a Windows app that performs the adapter addressing and internet sharing for
+you, and adds screen preview, recording, an SFTP browser and a remote console.
+
+It drives the same script documented here, so install the script first.
+
+---
+
+## 📜 License
+
+MIT. See [LICENSE](LICENSE).
+
+Thanks to the [ArkOS](https://github.com/christianhaitian/arkos) project and the
+PortMaster community.
