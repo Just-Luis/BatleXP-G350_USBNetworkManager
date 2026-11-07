@@ -496,6 +496,105 @@ start_ssh_server() {
 }
 
 # ------------------------------------------------------------------------------
+# Helper: This console's own hardware serial number
+#
+# Windows identifies a USB device by vendor id + product id + **serial number**.
+# The RNDIS gadget reports no serial at all (iSerialNumber is null), so Windows
+# falls back to keying the device on the physical path to it:
+#
+#     USB\VID_0525&PID_A4A2\5&1134133F&0&1   <- port 1
+#     USB\VID_0525&PID_A4A2\5&1134133F&0&2   <- port 2
+#
+# That means every USB port is a *different device* to Windows: a new adapter,
+# a new name (Ethernet 2 / 4 / 5), a new GUID, and the internet-sharing
+# configuration is lost each time the cable moves. Measured on hardware.
+#
+# Giving the gadget a serial makes the identity follow the *console* instead of
+# the port, so Windows treats every port as the same device.
+#
+# The serial must be unique per console, otherwise two consoles would present
+# the same identity to the same PC. Every RK3326 board carries its own
+# factory-burned serial, so it is read from the device tree rather than
+# assigned: nothing to provision, and a fixed value never has to be shipped.
+#
+# Three sources, most authoritative first. Never returns empty: the last resort
+# falls back to a random-per-boot value, which is still better than nothing and
+# cannot collide with another console.
+# ------------------------------------------------------------------------------
+g350_serial() {
+    local s=""
+
+    # 1. Factory-burned SoC serial (this board: c3d9b8674f4b94f6)
+    s=$(tr -d '\0' < /proc/device-tree/serial-number 2>/dev/null)
+
+    # 2. Kernel's copy of the same value
+    if [ -z "$s" ]; then
+        s=$(awk '/^Serial[[:space:]]*:/{print $3}' /proc/cpuinfo 2>/dev/null)
+    fi
+
+    # 3. Generated on first boot; still unique per installation
+    if [ -z "$s" ]; then
+        s=$(head -c 16 /etc/machine-id 2>/dev/null)
+    fi
+
+    printf '%s' "$s"
+}
+
+# ------------------------------------------------------------------------------
+# Helper: Load the RNDIS gadget with this console's serial number
+#
+# Replaces a bare `modprobe g_ether`. Two deliberate safeguards:
+#
+#  * If the module rejects the option, fall back to a plain load. Losing the
+#    stable identity is annoying; losing the USB network leaves the console
+#    unreachable with no way back in, so the option must never be fatal.
+#
+#  * dev_addr is fixed as well as iSerialNumber. It is derived from the same
+#    serial, so it differs between consoles (two consoles on one PC must not
+#    present the same MAC) but never changes for a given console.
+#
+# Locally-administered unicast MACs are used: first octet 0x02 sets the
+# locally-administered bit and clears the multicast bit.
+#
+# modprobe is called by absolute path on purpose. An SSH session gets
+# PATH=/usr/local/bin:/usr/bin:/bin:/usr/games - no /sbin - and sudo here does
+# not set secure_path, so a bare `sudo modprobe` fails with "command not found".
+# Every existing call in this script had that bug: it worked when launched from
+# the console's own TUI (whose PATH includes /sbin) and failed silently over
+# SSH, with the error swallowed by 2>/dev/null. The module is normally already
+# loaded at boot, which is why it was never noticed.
+# ------------------------------------------------------------------------------
+load_gadget() {
+    local serial
+    serial=$(g350_serial)
+
+    if [ -n "$serial" ]; then
+        # First 6 hex characters of the serial -> 3 octets.
+        local hex
+        hex=$(printf '%s' "$serial" | tr -cd '0-9a-f' | head -c 6)
+        local dev_addr=""
+        if [ ${#hex} -eq 6 ]; then
+            dev_addr="02:${hex:0:2}:${hex:2:2}:${hex:4:2}:00:01"
+        fi
+
+        if [ -n "$dev_addr" ]; then
+            if sudo /sbin/modprobe g_ether iSerialNumber="G350-$serial" \
+                                         dev_addr="$dev_addr" 2>/dev/null; then
+                return 0
+            fi
+        else
+            if sudo /sbin/modprobe g_ether iSerialNumber="G350-$serial" 2>/dev/null; then
+                return 0
+            fi
+        fi
+    fi
+
+    # Fallback: the original behaviour. The link must always come up.
+    sudo /sbin/modprobe g_ether 2>/dev/null
+    return $?
+}
+
+# ------------------------------------------------------------------------------
 # Helper: Re-apply usb0 addressing and default route WITHOUT tearing anything down
 #
 # Used when the PC end changes address while we are running, most importantly when
@@ -560,7 +659,7 @@ refresh_usb_network() {
 # ------------------------------------------------------------------------------
 start_services_cli() {
     if ! lsmod | grep -q "g_ether"; then
-        sudo modprobe g_ether 2>/dev/null
+        load_gadget
     fi
     sudo ip addr flush dev usb0 2>/dev/null
     sudo ip addr add 192.168.7.2/24 dev usb0 2>/dev/null
@@ -618,7 +717,7 @@ stop_usb_network() {
     sudo ip link set "$ifc" down 2>/dev/null
     # usb0 may still exist from an earlier gadget load even if another name won
     [ "$ifc" != "usb0" ] && sudo ip link set usb0 down 2>/dev/null
-    sudo modprobe -r g_ether 2>/dev/null
+    sudo /sbin/modprobe -r g_ether 2>/dev/null
 
     # Drop any cached probe verdict so the next start tests the real link
     rm -f "$PROBE_FILE" "$PROBE_LOCK" 2>/dev/null
@@ -651,7 +750,7 @@ start_services() {
 
     echo -e "${C_YELLOW}[1/4] Setting usb0 & IPs...${C_RESET}"
     if ! lsmod | grep -q "g_ether"; then
-        sudo modprobe g_ether 2>/dev/null
+        load_gadget
     fi
     sudo ip addr flush dev usb0 2>/dev/null
     sudo ip addr add 192.168.7.2/24 dev usb0 2>/dev/null
